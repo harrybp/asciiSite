@@ -2,13 +2,17 @@
 //  ASCII Webpage
 //    - By HarryBP
 //
-//  Define properties with config
-      var config = { width: 700 }
+//  Override properties with config
+//  DEFAULTS =    width:  700
+      var config = {};
 //
 //  Define page structure with build() method
       function build(){
+        blankLine();
         drawLine('-');
+        writeCentered('');
         writeCentered('Harry Bond-Preston');
+        writeCentered('');
         drawLine('-');
         var links = [
           { text: 'About Me', link: '#', selected: true },
@@ -33,7 +37,7 @@
 //         /\   |  __ \_   _|     drawLine()
 //        /  \  | |__) || |       writeCentered(text)
 //       / /\ \ |  ___/ | |       navbar(links)
-//      / ____ \| |    _| |_      
+//      / ____ \| |    _| |_      blankLine()
 //     /_/    \_\_|   |_____|
 //
 //-----------------------------------------------------------------------------
@@ -43,6 +47,10 @@ function drawLine(char) {
   for(var x = 0; x < pageWidth; x++) finished += char;
   text +=  (finished + '\n');
 }
+
+//-----------------------------------------------------------------------------
+//  Writes a blank line
+function blankLine(){ text += '\n'; }
 
 //-----------------------------------------------------------------------------
 //  Writes given text centered in the screen
@@ -109,7 +117,7 @@ function navbar(links){
 
 //-----------------------------------------------------------------------------
 //  Helper functions
-function getCharacterWidth(){
+function getCharacterWidth(){ //Get the width of one monospaced character
 	var sizingSpan = document.createElement("span");
 	sizingSpan.innerHTML = '--------------------';
 	sizingSpan.style.cssText += 'position: absolute; top: -100px; padding: 0px;';
@@ -118,13 +126,15 @@ function getCharacterWidth(){
 	sizingSpan.parentNode.removeChild(sizingSpan);
 	return width;
 }
-function getGlobalLeftPadding(){
+function getGlobalLeftPadding(){ //Calculate number of spaces to begin each line
   var text = '';
   for(var x = 0; x < globalLeftPadding; x++) text += '&nbsp;';
   return text;
 }
-function calculate(){
-  var configuration = (typeof config !== 'undefined')? config : {width:700};
+function calculate(){ //Calculate page size in characters, and render page
+  var configuration = (typeof config !== 'undefined')? config : {};
+  configuration.width = (typeof config.width !== 'undefined')? config.width : 700;
+  document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-family:\'Courier New\', Courier, monospace;font-size: 16px;';
   var siteWidth = (configuration.width);
   text = '';
   document.body.innerHTML = '';
@@ -135,7 +145,8 @@ function calculate(){
     globalLeftPadding = Math.floor((pageWidth-intWidth)/2);
     pageWidth = intWidth;
   } else {
-    globalLeftPadding = 0;
+    globalLeftPadding = 1;
+    pageWidth -= 2;
   }
   build();
   document.body.innerHTML = text;

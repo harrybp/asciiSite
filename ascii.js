@@ -4,7 +4,7 @@
 //
 //  Override properties with config
 //  DEFAULTS =    width:  700
-      var config = { width: 500};
+      var config = { width: 700};
 //
 //  Define page structure with build() method
       function build(){
@@ -34,17 +34,20 @@
         columns('- Zombie Run', '- Bounce', 'wpgames');
         columns(text1, text2, 'wpgames');
         columns('<a href="#">Click to Play</a>', '<a href="#">Click to Play</a>', 'wpgames');
-        writeCentered(' ', '|');
+        writeCentered(' ', '|', 'wpgames');
+        writeTitle(' Github links coming soon..', '|', 'wpgames');
+        writeCentered(' ', '|', 'wpgames');
         drawLine('&#175;', false, 2);
+        //popup();
       }
 //
 //-----------------------------------------------------------------------------
 
 
 
-//ToDO Make columns work properly with links?
+//ToDO Make columns work properly with links? and wrap text properly
 //Tidy some methods up
-//Popups
+//Popup: needs properly sizing, not destroy links, toggle-able, can add content etc
 //Dropdown for little nav
 //-----------------------------------------------------------------------------
 //               _____ _____ 
@@ -55,6 +58,49 @@
 //     /_/    \_\_|   |_____|
 //
 //-----------------------------------------------------------------------------
+function popup(){
+  var fullheight = Math.floor(window.innerHeight/16);
+  var height =Math.floor(fullheight /2); //25l lines
+  var width = Math.floor(fullwidth/3);
+  var lines = text.split('\n');
+  var x = lines.length - 1;
+  while(x < height + height/2){
+    blankLine();
+    x++;
+  }
+  var lines = text.split('\n');
+  var content = '';
+  var top = '&nbsp;';
+  var middle = '|';
+  var bottom = '&nbsp;';
+  for(var x = 0; x < width-2; x++){
+    top += '_';
+    middle += '&nbsp;';
+    bottom += '&#175;'
+  }
+  middle += '|';
+  top += '&nbsp;';
+  bottom += '&nbsp;';
+  var startH = Math.floor((fullheight - height)/4) - 2;
+  var startW = Math.floor((fullwidth - width)/2) ;
+  for(var x = 0; x < lines.length; x++){
+    var line = strip(lines[x]).replace(/&nbsp;/g, ' ');
+    if(x == startH){
+      content += line.substring(0, startW).replace(' ', '&nbsp;') + top + line.substring(fullwidth - startW , line.length) + '\n';
+    } else if(x == startH + height) {
+      content += line.substring(0, startW).replace(' ', '&nbsp;') + bottom + line.substring(fullwidth - startW , line.length) + '\n';
+    } else if(x < startH + height && x > startH){
+      content += line.substring(0, startW).replace(' ', '&nbsp;') + middle + line.substring(fullwidth - startW , line.length) + '\n';
+    } else {
+      content += lines[x] + '\n';
+    }
+  }
+  text = content;
+}
+
+
+
+
 function columns(text1, text2, tab){
   var availableWidth = pageWidth - 8;
   var width1 = Math.floor(availableWidth/2);
@@ -110,7 +156,7 @@ function navbar(brand, links){
   for(var x = 0; x < startBrand; x++) finished += '&nbsp;';
   finished += brand;
   if(totalLength + 4*startBrand < fullwidth) {
-    var startLinks = Math.floor(fullwidth - linkLength - ((links.length)*startBrand));  
+    var startLinks = Math.floor(fullwidth - linkLength - ((links.length)*startBrand))-1;  
     for(var x = 0; x < startLinks - startBrand - brand.length; x++) finished += '&nbsp;';
     for(var index in links){
       var link = links[index];
@@ -168,7 +214,8 @@ function drawLine(char, fill, cut) {
 //-----------------------------------------------------------------------------
 //  Writes a blank line
 function blankLine(){ 
-  text += '\n';
+  for(var x = 0; x < fullwidth; x++) text += '&nbsp;';
+  text += '\n';  
  }
 
 //-----------------------------------------------------------------------------
@@ -177,7 +224,7 @@ function blankLine(){
 //    Write centered:     title aligned at center
 //    Write at position:  title aligned at 1/X of page width
 function writeTitle(content, padChar, tabname){ writeAtPosition(content, 0, padChar, tabname); }
-function writeCentered(content, padChar){ writeAtPosition(content, 2, padChar); }
+function writeCentered(content, padChar, tabname){ writeAtPosition(content, 2, padChar, tabname); }
 function writeAtPosition(content, position, padChar, tabname){
   var finished = (typeof tabname !== 'undefined')? '<span class="'+tabname+'">' : '';
   var padding = (padChar)? padChar : '|'

@@ -34,7 +34,8 @@
         columns('- Zombie Run', '- Bounce', 'wpgames');
         columns(text1, text2, 'wpgames');
         columns('<a href="#">Click to Play</a>', '<a href="#">Click to Play</a>', 'wpgames');
-        drawLine('.');
+        writeCentered(' ', '|');
+        drawLine('&#175;', false, 2);
       }
 //
 //-----------------------------------------------------------------------------
@@ -154,11 +155,13 @@ function drawTabs(tabs){
 //-----------------------------------------------------------------------------
 //  Draws a line of given character across the screen width
 //  Set fill = true to draw across full screen
-function drawLine(char, fill) {
+function drawLine(char, fill, cut) {
+  var cut = (cut)? cut: 0;
   var width = (fill)? fullwidth : pageWidth-1;
-  if(typeof fill == 'undefined') var finished = getGlobalLeftPadding();
+  if(typeof fill == 'undefined' || fill == false) var finished = getGlobalLeftPadding();
   else finished = '';
-  for(var x = 0; x < width; x++) finished += char;
+  for(var x = 0; x < cut/2; x++) finished += ' ';
+  for(var x = 0; x < width-cut; x++) finished += char;
   text += (finished + '\n');
 }
 

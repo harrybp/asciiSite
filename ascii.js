@@ -33,7 +33,7 @@
         var text2 = '- Bounce \n Keep the ball from escaping! My second game, simpler but more mathematically complex. \n <a href="#">Click to Play</a>';
         columns(text1, text2, 'wpgames');
         write(' ', '|', 'wpgames');
-        write('<a href="#">Github</a> links coming soon..', '|', 'wpgames');
+        write('<a href="#">Github links coming soon..</a>', '|', 'wpgames');
         write(' ', '|', 'wpgames');
         drawLine('&#175;', false, 2);
         //popup();
@@ -47,6 +47,7 @@
 //Tidy some methods up
 //Popup: needs properly sizing, not destroy links, toggle-able, can add content etc
 //Dropdown for little nav
+// need one more padding on right??
 //-----------------------------------------------------------------------------
 //               _____ _____ 
 //         /\   |  __ \_   _|     navbar(brand, links)
@@ -70,20 +71,20 @@ function navbar(brand, links){
   var totalLength = linkLength + brand.length;
   var startBrand = Math.floor(fullwidth / 10);
   var finished = '';
-  for(var x = 0; x < startBrand; x++) finished += '&nbsp;';
+  for(var x = 0; x < startBrand; x++) finished += ' ';
   finished += brand;
   if(totalLength + 4*startBrand < fullwidth) {
     var startLinks = Math.floor(fullwidth - linkLength - ((links.length)*startBrand))-1;  
-    for(var x = 0; x < startLinks - startBrand - brand.length; x++) finished += '&nbsp;';
+    for(var x = 0; x < startLinks - startBrand - brand.length; x++) finished += ' ';
     for(var index in links){
       var link = links[index];
       if(link.active) finished+= '['+link.text+']';
       else finished += '<a href="'+link.link + '">'+link.text + '</a>';
-      for(var x = 0; x < startBrand; x++) finished += '&nbsp;';
+      for(var x = 0; x < startBrand; x++) finished += ' ';
     }
   } else {
     var startLinks = fullwidth - 3 - startBrand;
-    for(var x = 0; x < startLinks - startBrand - brand.length; x++) finished += '&nbsp;';
+    for(var x = 0; x < startLinks - startBrand - brand.length; x++) finished += ' ';
     finished += '[<a href="#", onclick="navpopup()">X</a>]';  
   }
   text += finished + '\n';  
@@ -121,9 +122,9 @@ function columns(text1, text2, tabname, wrapamount){
   var lines2 = wrap(text2, width2);
   var total = '';
   while(lines1.length > 0 || lines2.length > 0){
-    if(lines1.length == 0) var line1 = pad('&nbsp;', width1, '&nbsp;');
+    if(lines1.length == 0) var line1 = pad(' ', width1, ' ');
     else var line1 = lines1.shift();
-    if(lines2.length == 0) var line2 = pad('&nbsp;', width2, '&nbsp;'); 
+    if(lines2.length == 0) var line2 = pad(' ', width2, ' '); 
     else var line2 = lines2.shift();
     var finished = (typeof tabname !== 'undefined')? '<span class="'+tabname+'">' : '';
     finished += getGlobalLeftPadding() + "| " + line1 + ' | ' + line2 + ' |\n';
@@ -157,29 +158,29 @@ function tabs(tabsGiven){
   var links = tabs.links;
   var paddingAbove = (tabs.topPadding)? tabs.topPadding : '|';
   var paddingBelow = (tabs.bottomPadding) ? tabs.bottomPadding : paddingAbove;
-  var line1 = line2 = getGlobalLeftPadding() + paddingAbove + '&nbsp;';
+  var line1 = line2 = getGlobalLeftPadding() + paddingAbove + ' ';
   var line3 = getGlobalLeftPadding() + paddingBelow + '&#175;';
   var count = 2;
   for(var index = 0; index < links.length; index++){
     var tab = links[index];
-    line1 += '&nbsp;' + new Array(tab.text.length + 2 + 1).join('_');
+    line1 += ' ' + new Array(tab.text.length + 2 + 1).join('_');
     line2 += '| ';
     if(!tab.active) line2 += '<a href="#", onclick="showTab(\''+tabs.key+'\',\''+tab.link+'\')">'
     line2 += tab.text;
     if(!tab.active) line2 += '</a>'
-    line2 += "&nbsp;";
-    var line3Char = (tab.active)? '&nbsp;' : '&#175;';
+    line2 += " ";
+    var line3Char = (tab.active)? ' ' : '&#175;';
     line3 += line3Char + new Array(tab.text.length + 2 + 1).join(line3Char);
     count += 3+ tab.text.length;
   }
   line2 += '|';
-  line1 += "&nbsp;";
+  line1 += " ";
   line3 += '&#175;';
   var missing = pageWidth - count - 3;
   for(var x = 0; x < missing; x++){
     line3 += '&#175;';
-    line1 += "&nbsp;";
-    line2 += "&nbsp;";
+    line1 += " ";
+    line2 += " ";
   }
   text += line1 + paddingAbove + '\n' + line2 + paddingAbove + '\n' + line3 + paddingBelow +'\n';
 }
@@ -200,7 +201,7 @@ function drawLine(char, fill, cut) {
 //-----------------------------------------------------------------------------
 //  Writes a blank line
 function blankLine(){ 
-  for(var x = 0; x < fullwidth; x++) text += '&nbsp;';
+  for(var x = 0; x < fullwidth; x++) text += ' ';
   text += '\n';  
  }
 
@@ -233,9 +234,9 @@ function wrap(text, width){
   var line = '';
   while(text.length > 0){
     if(strip(line).length + strip(text[0]).length < width){
-      line += text.shift() + '&nbsp;';
+      line += text.shift() + ' ';
       if(line.indexOf('\n') != -1){
-        lines.push(pad(line.substring(0, line.indexOf('\n')), width, '&nbsp;'));
+        lines.push(pad(line.substring(0, line.indexOf('\n')), width, ' '));
         line = '';
       }
     } else if(strip(text[0]).length >= width){
@@ -243,15 +244,16 @@ function wrap(text, width){
       text.unshift(longword.substring(longword.length/2, longword.length));
       text.unshift(longword.substring(0, longword.length/2));
     } else {
-      lines.push(pad(line, width, '&nbsp;'));
+      lines.push(pad(line, width, ' '));
       line = '';
     }
   }
-  lines.push(pad(line, width, '&nbsp;'));
+  lines.push(pad(line, width, ' '));
+  console.log(lines[0])
   return lines;
 } 
 function pad(line, length, character){
-  if(line.length < 1) line = '&nbsp;';
+  if(line.length < 1) line = ' ';
   while(strip(line).length < length){
     line += character;
   }
@@ -261,11 +263,11 @@ function strip(text){
   var div = document.createElement("div");
   div.innerHTML = text;
   var text = div.textContent || div.innerText || "";
-  return text.replace(/&nbsp;/g, ' ');
+  return text.replace(/ /g, ' ');
 }
 function getGlobalLeftPadding(){ //Calculate number of spaces to begin each line
   var text = '';
-  for(var x = 0; x < globalLeftPadding; x++) text += '&nbsp;';
+  for(var x = 0; x < globalLeftPadding; x++) text += ' ';
   return text;
 }
 function getCharacterWidth(){ //Get the width of one monospaced character

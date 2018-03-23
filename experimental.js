@@ -1,29 +1,34 @@
-function getSquare(width, cross){
-  var height = Math.floor(width * getCharacterWidth() /getLineHeight());
-  var finished = [];
-  finished.push(' ' + new Array(width -1).join('_') + ' ');
-  for(var x = 1; x < height-1; x++){
-    if(cross && x == 1) finished.push("|" +  new Array(width - 4).join(' ') + '[<a href="#", onclick="closePopup()">X</a>]|');
-    else finished.push("|" +  new Array(width - 1).join(' ') + '|');
+
+function addCanvas(){
+
+}
+
+
+
+
+function addPopups2(){  
+  for(var x in globalPopups){
+    if(globalPopups[x].active){
+      var lines = document.body.innerHTML.split('\n');
+      var finished = '';
+      var popup = globalPopups[x];
+      var square = getSquare(popup.size, popup.content, true);
+      var startH = Math.floor((Math.floor(window.innerHeight / getLineHeight()) - square.length)/popup.position);
+      var startW = Math.floor((fullwidth - popup.size)/2);
+      for(var x = 0; x < startH + square.length || x < lines.length; x++){
+        var line = (x < lines.length-1)? strip(lines[x]) + '\n' : pad(' ', fullwidth, ' ') + '\n'; 
+        if(x >= startH && x < startH + square.length){
+          line = line.substring(0, startW) + square[x-startH] + line.substring(startW + popup.size, line.length) ;
+        }
+        finished += line;
+      }
+      document.body.innerHTML = finished;
+      if(typeof popup.function != 'undefined') eval(popup.function);
+    }
   }
-  finished.push(' ' + new Array(width -1).join('&#175;') + ' ');
-  return finished;
 }
 
 
-function getLineHeight(){
-   var temp = document.createElement(document.body.nodeName);
-   temp.setAttribute("style","margin:0px;padding:0px;font-family:"+document.body.style.fontFamily+";font-size:"+document.body.style.fontSize);
-   temp.innerHTML = "test";
-   temp = document.body.parentNode.appendChild(temp);
-   var ret = temp.clientHeight;
-   temp.parentNode.removeChild(temp);
-   return ret;
-}
-
-//var globalPopups = [
-//  { size: 35, position: 5, active: true }
-//]
 
 
 

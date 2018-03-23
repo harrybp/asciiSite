@@ -4,25 +4,21 @@
 //  TODO:
 //    - Fix bug where ball hits end of line and travels up it
 //
-      //var gameSize = 512;
-      createCanvas2();
-      init();
+      var going = false;
 //
 //-----------------------------------------------------------------------------
 
 
-function createCanvas2(){
-
-  gameSize = Math.floor(window.innerWidth/4);
-  var x = (window.innerWidth - gameSize) / 2 -10
-  var y = (window.innerHeight - gameSize) / 4
-  console.log(x)
+function createCanvas2(width, height, left, top){
   canvas = document.createElement("canvas");
   ctx = canvas.getContext("2d");
-  canvas.width = gameSize;
-  canvas.height = gameSize;
-  canvas.style.cssText += "background-color: black; position:absolute; left: " + x +"px; top: "+ y+ "px; margin: auto; width: " + gameSize + "px; height: " + gameSize + "px; border: 2px solid black;";
+  canvas.width = width;
+  canvas.height = height;
+  canvas.style.cssText += "position:absolute; left: " + left +"px; top: "+ top+ "px; margin: auto; width: " + width + "px; height: " + height + "px; border: 0px solid black; background-color: white;";
   document.body.insertBefore(canvas, document.body.firstChild);
+  gameSize = height;
+  going = true;
+  init();
 }
 //-----------------------------------------------------------------------------
 //  Creates game canvas of given size and adds to body
@@ -38,6 +34,7 @@ function createCanvas(){
 //-----------------------------------------------------------------------------
 //  Called to start a new game
 function init(){
+  console.log('d')
   frameLength = 8;
   paused = dead = false;
   rotateSpeed = 1/128;
@@ -45,18 +42,18 @@ function init(){
   balls = [];
   balls.push(addBall({x:20,y:20}));
   lines = [
-    { a: { x: 2*gameSize/8, y: 2*gameSize/8 }, b: { x: 7 *gameSize/16, y: 2* gameSize/8 }, rotate: true, colour: '#00E676', count: 0 },
-    { a: { x: 2*gameSize/8, y: 2*gameSize/8 }, b: { x: 2* gameSize/8, y: 7* gameSize/16 }, rotate: true, colour: '#00E676', count: 0 },
-    { a: { x: 6*gameSize/8, y: 2*gameSize/8 }, b: { x: 9 *gameSize/16, y: 2* gameSize/8 }, rotate: true, colour: '#00E676', count: 0 },
-    { a: { x: 6*gameSize/8, y: 2*gameSize/8 }, b: { x: 6* gameSize/8, y: 7* gameSize/16 }, rotate: true, colour: '#00E676', count: 0 },
-    { a: { x: 6*gameSize/8, y: 6*gameSize/8 }, b: { x: 6 *gameSize/8, y: 9* gameSize/16 }, rotate: true, colour: '#00E676', count: 0 },
-    { a: { x: 6*gameSize/8, y: 6*gameSize/8 }, b: { x: 9* gameSize/16, y: 6* gameSize/8 }, rotate: true, colour: '#00E676', count: 0 },
-    { a: { x: 2*gameSize/8, y: 6*gameSize/8 }, b: { x: 2 *gameSize/8, y: 9* gameSize/16 }, rotate: true, colour: '#00E676', count: 0 },
-    { a: { x: 2*gameSize/8, y: 6*gameSize/8 }, b: { x: 7* gameSize/16, y: 6* gameSize/8 }, rotate: true, colour: '#00E676', count: 0 },
-    { a: { x: 10, y: 2*gameSize/8 }, b: { x: 10, y: 6*gameSize/8 }, rotate: false, colour: '#FFA726', count: 0 },
-    { a: { x: 2*gameSize/8, y: 10 }, b: { x: 6*gameSize/8, y: 10 }, rotate: false, colour: '#FFA726', count: 0 },
-    { a: { x: gameSize-10, y: 2*gameSize/8 }, b: { x: gameSize-10, y: 6*gameSize/8 }, rotate: false, colour: '#FFA726', count: 0 },
-    { a: { x: 2*gameSize/8, y: gameSize-10 }, b: { x: 6*gameSize/8, y: gameSize-10 }, rotate: false, colour: '#FFA726', count: 0 },
+    { a: { x: 2*gameSize/8, y: 2*gameSize/8 }, b: { x: 7 *gameSize/16, y: 2* gameSize/8 }, rotate: true, colour: '#00796B', count: 0 },
+    { a: { x: 2*gameSize/8, y: 2*gameSize/8 }, b: { x: 2* gameSize/8, y: 7* gameSize/16 }, rotate: true, colour: '#00796B', count: 0 },
+    { a: { x: 6*gameSize/8, y: 2*gameSize/8 }, b: { x: 9 *gameSize/16, y: 2* gameSize/8 }, rotate: true, colour: '#00796B', count: 0 },
+    { a: { x: 6*gameSize/8, y: 2*gameSize/8 }, b: { x: 6* gameSize/8, y: 7* gameSize/16 }, rotate: true, colour: '#00796B', count: 0 },
+    { a: { x: 6*gameSize/8, y: 6*gameSize/8 }, b: { x: 6 *gameSize/8, y: 9* gameSize/16 }, rotate: true, colour: '#00796B', count: 0 },
+    { a: { x: 6*gameSize/8, y: 6*gameSize/8 }, b: { x: 9* gameSize/16, y: 6* gameSize/8 }, rotate: true, colour: '#00796B', count: 0 },
+    { a: { x: 2*gameSize/8, y: 6*gameSize/8 }, b: { x: 2 *gameSize/8, y: 9* gameSize/16 }, rotate: true, colour: '#00796B', count: 0 },
+    { a: { x: 2*gameSize/8, y: 6*gameSize/8 }, b: { x: 7* gameSize/16, y: 6* gameSize/8 }, rotate: true, colour: '#00796B', count: 0 },
+    { a: { x: 10, y: 2*gameSize/8 }, b: { x: 10, y: 6*gameSize/8 }, rotate: false, colour: '#F57C00', count: 0 },
+    { a: { x: 2*gameSize/8, y: 10 }, b: { x: 6*gameSize/8, y: 10 }, rotate: false, colour: '#F57C00', count: 0 },
+    { a: { x: gameSize-10, y: 2*gameSize/8 }, b: { x: gameSize-10, y: 6*gameSize/8 }, rotate: false, colour: '#F57C00', count: 0 },
+    { a: { x: 2*gameSize/8, y: gameSize-10 }, b: { x: 6*gameSize/8, y: gameSize-10 }, rotate: false, colour: '#F57C00', count: 0 },
   ];
   rotateLines(Math.PI/4)
 }
@@ -76,7 +73,7 @@ function addBall(pos){
     position: { x: pos.x, y: pos.y },
     speed: { x: 20, y: 20 },
     radius: gameSize/64,
-    colour: "#FFFFFF",
+    colour: "#000000",
   }
   regulateSpeed(ball.speed,gameSize/256);
   return ball;
@@ -87,13 +84,18 @@ function addBall(pos){
 var start = null;
 window.requestAnimationFrame(step);
 function step(timestamp){
-  if(!start) start = timestamp;
-  var progress = timestamp - start;
-  if(progress > frameLength){
-    start = timestamp;
-    if(!paused){
-      update();
+  console.log('s')
+  if(going){
+
+    if(!start) start = timestamp;
+    var progress = timestamp - start;
+    if(progress > frameLength){
+      start = timestamp;
+      if(!paused){
+        update();
+      }
     }
+    
   }
   window.requestAnimationFrame(step);
 }
@@ -170,22 +172,23 @@ function getNormal(line){
 //-----------------------------------------------------------------------------
 //  Paints a frame
 function draw(){
-  ctx.clearRect(0,0,gameSize,gameSize);
+  var dif = (canvas.style.width.substring(0,canvas.style.width.length-2) - canvas.style.height.substring(0,canvas.style.height.length-2) )/2;
+  ctx.clearRect(dif,0,gameSize,gameSize);
   ctx.lineWidth=gameSize/100;
   for(var lineIndex in lines){
     var line = lines[lineIndex];
     ctx.strokeStyle = line.colour;
-    if(line.count > 0) ctx.strokeStyle = '#FFFFFF';
+    if(line.count > 0) ctx.strokeStyle = '#84FFFF';
     ctx.beginPath();
-    ctx.moveTo(line.a.x, line.a.y);
-    ctx.lineTo(line.b.x, line.b.y);
+    ctx.moveTo(dif+line.a.x, line.a.y);
+    ctx.lineTo(dif+line.b.x, line.b.y);
     ctx.stroke();
   }
   for(var i in balls){
     var ball = balls[i];
     ctx.fillStyle = ball.colour;
     ctx.beginPath();
-    ctx.arc(ball.position.x,ball.position.y,ball.radius,0,2*Math.PI);
+    ctx.arc(dif+ball.position.x,ball.position.y,ball.radius,0,2*Math.PI);
     ctx.fill();
   }
   ctx.font = (gameSize/256 * 15) + "px Arial";

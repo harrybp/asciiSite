@@ -36,8 +36,9 @@
         write('More games coming soon most likely..', '|', 'wpgames');
         write(' ', '|', 'wpgames');
         drawLine('&#175;', false, 2);
-        popup('one',35, 5);
-        popup('two',35, 2);
+        var popup1 = 'Zombie Run!';
+        popup('one', 'Zombie Run!', 50, 5);
+        popup('two', 'Bounce!',50, 5, 'createCanvas2((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());');
       }
 //
 //-----------------------------------------------------------------------------
@@ -55,17 +56,18 @@
 //        /  \  | |__) || |       write(text)
 //       / /\ \ |  ___/ | |       columns(text1, text2)
 //      / ____ \| |    _| |_      tabs(tabsData)
-//     /_/    \_\_|   |_____|
+//     /_/    \_\_|   |_____|     popup(key,content,size)
 //
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //  Adds a popup of width = size located 1/position of the way down the page
 //  Open with openpopup(key)
-function popup(key, size, position){
+function popup(key, content, size, position, func){
   if(size > fullwidth) size = fullwidth;
   var pos = (position)? position : 2;
-  if(typeof globalPopups[key] == 'undefined') globalPopups[key] = { key: key, size: size, position: pos, active: false };
+  if(typeof globalPopups[key] == 'undefined') globalPopups[key] = { key: key, size: size, position: pos, active: false, content: content };
   globalPopups[key].size = size;
+  if(func) globalPopups[key].function = func;
 }
 
 //-----------------------------------------------------------------------------
@@ -223,12 +225,16 @@ function blankLine(){ text += new Array(fullwidth + 1).join(' ') + '\n'; }
 //           q###r                  - called to calculate size of and render the page
 //            ""                  navpopup()
 //                                  - shows the dropdown links for mobile navbar
-//                                addPopups()
-//                                  - adds all active popups to the screen
-//                                openPopup(key)
-//                                  - opens the popup with given key
-//                                closePopup()
-//                                  - closes any open popup
+//    addPopups()
+//      - adds all active popups to the screen
+//    penPopup(key)
+//      - opens the popup with given key
+//    closePopup()
+//      - closes any open popup
+//    getLineHeight()
+//      - get height in pixels of one line of text
+//    getSquare(width, text, cross)
+//      - returns square of given width containing text (and exit btn if cross=true)
 //
       window.onload = function(){ globalTabs = {}; globalPopups = {}; calculate(); };
       window.onresize = function(event) { calculate(); };
@@ -339,7 +345,7 @@ function calculate(){ //Calculate page size in characters, and render page
   build();
   document.body.innerHTML = text;
   doTabs();
-  addPopups();
+  addPopups2();
 }
 function navpopup(){
   var lines = text.split('\n');
@@ -361,7 +367,7 @@ function addPopups(){
       var lines = document.body.innerHTML.split('\n');
       var finished = '';
       var popup = globalPopups[x];
-      var square = getSquare(popup.size, true);
+      var square = getSquare(popup.size, popup.content, true);
       var startH = Math.floor((Math.floor(window.innerHeight / getLineHeight()) - square.length)/popup.position);
       var startW = Math.floor((fullwidth - popup.size)/2);
       for(var x = 0; x < startH + square.length || x < lines.length; x++){
@@ -372,6 +378,7 @@ function addPopups(){
         finished += line;
       }
       document.body.innerHTML = finished;
+      if(typeof popup.function != 'undefined') eval(popup.function);
     }
   }
 }
@@ -384,4 +391,26 @@ function closePopup(){
     globalPopups[key].active = false;
   }
   calculate();
+}
+function getLineHeight(){
+   var temp = document.createElement(document.body.nodeName);
+   temp.setAttribute("style","margin:0px;padding:0px;font-family:"+document.body.style.fontFamily+";font-size:"+document.body.style.fontSize);
+   temp.innerHTML = "test";
+   temp = document.body.parentNode.appendChild(temp);
+   var ret = temp.clientHeight;
+   temp.parentNode.removeChild(temp);
+   return ret;
+}
+function getSquare(width, string, cross){
+  var height = Math.floor(width * getCharacterWidth() /getLineHeight());
+  var finished = [];
+  var content = wrap(string, width - 4)
+  finished.push(' ' + new Array(width -1).join('_') + ' ');
+  for(var x = 1; x < height-1; x++){
+    var thisLine = (content[x-2])? content[x-2] : pad(' ', width - 4, ' ');
+    if(cross && x == 1) finished.push("|" +  new Array(width - 4).join(' ') + '[<a href="#", onclick="closePopup()">X</a>]|');
+    else finished.push("| " +  thisLine+ ' |');
+  }
+  finished.push(' ' + new Array(width -1).join('&#175;') + ' ');
+  return finished;
 }

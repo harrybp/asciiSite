@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<head>
+	<style>
+
+	</style>
+</head>
+<body>
+	<script src='experimental.js'></script>
+	<script src='ascii.js'></script>
+	<script>
+		var config = { width: 900};
+//
+//  Define page structure with build() method
+      function build(){
+        var links = [
+          { text: 'About Me', link: '#', active: false },
+          { text: 'Web Projects', link: '#', active: true },
+        ];
+        navbar('HarryBP', links);
+        blankLine();
+        write('Web Projects', ' ')
+        var links = [
+          { text: 'Games', active: true, link: 'games' },
+          { text: 'Other', active: false, link: 'other' },
+        ];
+        var tabsInfo = { 
+          key: 'wp', 
+          links: links,
+          topPadding: ' ',
+          bottomPadding: '|',
+        }
+        tabs(tabsInfo);
+        write('Games', '|', 'wpgames');
+        write(' ', '|', 'wpgames');
+        write('I have made two HTML5 <a href="#" onclick=popover("asha")>games</a> in the past year, both are unfinished but playable..', '|', 'wpgames');
+
+        write('Other', '|', 'wpother');
+        write('');
+        var text1 = '- Zombie Run \n A side scrolling run-and-shoot type game. My first attempt at building a HTML5 game. \n <a href="#" onclick=openPopup("one")>Click</a> to Play';
+        var text2 = '- Bounce \n Keep the ball from escaping! My second game, simpler but more mathematically complex. \n <a href="#" onclick=openPopup("two")>Click</a> to Play';
+        columns(text1, text2, 'wpgames');
+        write(' ', '|', 'wpgames');
+        write('More games coming soon most likely..', '|', 'wpgames');
+        write(' ', '|', 'wpgames');
+        drawLine('&#175;', false, 2);
+        var popup1 = 'Zombie Run!';
+        popup('one', 'Zombie Run!', 50, 5,'createCanvasTiles((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());', 'stopGame();');
+        popup('two', 'Bounce!',50, 5, 'createCanvasRotate((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());', 'stopGameTiles();');
+      }
+	</script>
+	<script src= 'rotateGame.js'></script>
+	<script src= 'tiles.js'></script>
+</body>

@@ -4,12 +4,12 @@
 //  TODO:
 //    - Fix bug where ball hits end of line and travels up it
 //
-      var going = false;
 //
 //-----------------------------------------------------------------------------
 
-
-function createCanvas2(width, height, left, top){
+//-----------------------------------------------------------------------------
+//  Creates game canvas of given size and position and adds to body
+function createCanvasRotate(width, height, left, top){
   canvas = document.createElement("canvas");
   ctx = canvas.getContext("2d");
   canvas.width = width;
@@ -17,18 +17,7 @@ function createCanvas2(width, height, left, top){
   canvas.style.cssText += "position:absolute; left: " + left +"px; top: "+ top+ "px; margin: auto; width: " + width + "px; height: " + height + "px; border: 0px solid black; background-color: white;";
   document.body.insertBefore(canvas, document.body.firstChild);
   gameSize = height;
-  going = true;
   init();
-}
-//-----------------------------------------------------------------------------
-//  Creates game canvas of given size and adds to body
-function createCanvas(){
-  canvas = document.createElement("canvas");
-  ctx = canvas.getContext("2d");
-  canvas.width = gameSize;
-  canvas.height = gameSize;
-  canvas.style.cssText += "display:block; margin: auto; width: " + gameSize + "px; height: " + gameSize + "px; ";
-  document.body.insertBefore(canvas, document.body.firstChild);
 }
 
 //-----------------------------------------------------------------------------
@@ -56,6 +45,7 @@ function init(){
     { a: { x: 2*gameSize/8, y: gameSize-10 }, b: { x: 6*gameSize/8, y: gameSize-10 }, rotate: false, colour: '#F57C00', count: 0 },
   ];
   rotateLines(Math.PI/4)
+  startGame();
 }
 
 //-----------------------------------------------------------------------------
@@ -64,6 +54,7 @@ function gameOver(){
   for(var lineIndex in lines){ lines[lineIndex].colour = "#FFFFFF"; }
   balls = [];
   dead = true;
+  stopGame();
 }
 
 //-----------------------------------------------------------------------------
@@ -81,28 +72,27 @@ function addBall(pos){
 
 //-----------------------------------------------------------------------------
 //  Game loop - Calls update Frame repeatedly
-var start = null;
-window.requestAnimationFrame(step);
+var start = frameLoop = null;
+function startGame() { if(dead) stopGame(); else if(!frameLoop) frameLoop = window.requestAnimationFrame(step); }
+function stopGame() { if(frameLoop) { window.cancelAnimationFrame(frameLoop); frameLoop = undefined;  } }
 function step(timestamp){
-  console.log('s')
-  if(going){
-
-    if(!start) start = timestamp;
-    var progress = timestamp - start;
-    if(progress > frameLength){
-      start = timestamp;
-      if(!paused){
-        update();
-      }
+  frameLoop = undefined;
+  if(!start) start = timestamp;
+  var progress = timestamp - start;
+  if(progress > frameLength){
+    start = timestamp;
+    if(!paused){
+      updateR();
     }
-    
   }
-  window.requestAnimationFrame(step);
+ startGame();
 }
 
+
+
 //-----------------------------------------------------------------------------
-//  Updates all entities every frame
-function update(){
+//  updateRs all entities every frame
+function updateR(){
   rotateLines(rotateSpeed * direction);
   for(var ballIndex in balls){
     var ball = balls[ballIndex];
@@ -125,6 +115,7 @@ function update(){
     ball.speed = regulateSpeed(ball.speed,gameSize/128);
   }
   draw();
+
 }
 
 //-----------------------------------------------------------------------------
@@ -240,8 +231,12 @@ window.onkeydown = function(e) {
   if (key == 39) { direction = 1; }
   else if (key == 37) { direction = -1; }
   if(key == 80){ 
-    if(dead) init(); 
-    paused = !paused; 
+    if(dead) {
+      init(); 
+    } else {
+      paused = !paused; 
+    }
+    
   }
 }
 window.onkeyup = function(e){

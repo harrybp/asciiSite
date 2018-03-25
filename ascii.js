@@ -4,7 +4,7 @@
 //
 //  Override properties with config
 //  DEFAULTS =    width:  700
-      var config = { width: 700};
+/*      var config = { width: 900};
 //
 //  Define page structure with build() method
       function build(){
@@ -17,7 +17,8 @@
         write('Web Projects', ' ')
         var links = [
           { text: 'Games', active: true, link: 'games' },
-          { text: 'Other', active: false, link: 'other' }
+          { text: 'Other', active: false, link: 'other' },
+          { text: 'More', active: false, link: 'otheer' }
         ];
         var tabsInfo = { 
           key: 'wp', 
@@ -27,6 +28,9 @@
         }
         tabs(tabsInfo);
         write('Games', '|', 'wpgames');
+        write(' ', '|', 'wpgames');
+        write('<a href="#">past</a> I have made two HTML5 games in the year, both are unfinished but playable..', '|', 'wpgames');
+
         write('Other', '|', 'wpother');
         write('');
         var text1 = '- Zombie Run \n A side scrolling run-and-shoot type game. My first attempt at building a HTML5 game. \n <a href="#" onclick=openPopup("one")>Click</a> to Play';
@@ -37,19 +41,24 @@
         write(' ', '|', 'wpgames');
         drawLine('&#175;', false, 2);
         var popup1 = 'Zombie Run!';
-        popup('one', 'Zombie Run!', 50, 5);
-        popup('two', 'Bounce!',50, 5, 'createCanvas2((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());');
-      }
+        popup('one', 'Zombie Run!', 50, 5,'createCanvasTiles((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());', 'stopGame();');
+        popup('two', 'Bounce!',50, 5, 'createCanvasRotate((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());', 'stopGameTiles();');
+        //var test ='this is a test sentence blah ok';
+       // wrap2(text, 20);
+      }*/
 //
 //-----------------------------------------------------------------------------
 
 
 
-//ToDO Make columns work properly with links? and wrap text properly
-//Tidy some methods up
-//Popup: needs properly sizing, not destroy links, toggle-able, can add content etc
-//Dropdown for little nav
+// ToDO 
+//represent lines as objects, modify them and then write to body at v end
+// Tidy some methods up
+// Popup:can add content better etc
+// Dropdown for little nav
 // need one more padding on right??
+// imstead of passing function maybe pass id of element to show?
+// Generalise dropdown method, (x,Y)
 //-----------------------------------------------------------------------------
 //               _____ _____ 
 //         /\   |  __ \_   _|     navbar(brand, links)
@@ -62,12 +71,14 @@
 //-----------------------------------------------------------------------------
 //  Adds a popup of width = size located 1/position of the way down the page
 //  Open with openpopup(key)
-function popup(key, content, size, position, func){
+function popup(key, content, size, position, funcOpen, funcClose){
   if(size > fullwidth) size = fullwidth;
   var pos = (position)? position : 2;
   if(typeof globalPopups[key] == 'undefined') globalPopups[key] = { key: key, size: size, position: pos, active: false, content: content };
   globalPopups[key].size = size;
-  if(func) globalPopups[key].function = func;
+  if(funcOpen) globalPopups[key].function = funcOpen;
+  if(funcOpen) globalPopups[key].functionClose = funcClose;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -240,22 +251,24 @@ function blankLine(){ text += new Array(fullwidth + 1).join(' ') + '\n'; }
       window.onresize = function(event) { calculate(); };
 //
 //-----------------------------------------------------------------------------
-function wrap(text, width){
-  var text = text.split(' ');
+function wrap(content, width){
+  var wordsSplit = splitText(content);
   var lines = [];
   var line = '';
-  while(text.length > 0){
-    if(strip(line).length + strip(text[0]).length < width){
-      line += text.shift() + ' ';
+  while(wordsSplit.length > 0){
+    if(strip(line).length + strip(wordsSplit[0].text).length < width){
+      var word = wordsSplit.shift();
+      if(word.link) line += '<a href="' + word.href + '" onclick=' + word.onclick + ">" + word.text + "</a> ";
+      else line += word.text + ' ';
       if(line.indexOf('\n') != -1){
         lines.push(pad(line.substring(0, line.indexOf('\n')), width, ' '));
         line = '';
       }
-    } else if(strip(text[0]).length >= width ){
-      var longword = text.shift();
+    } else if(strip(wordsSplit[0].text).length >= width ){
+      var longword = wordsSplit.shift();
       console.log(longword);
-      text.unshift(longword.substring(longword.length/2, longword.length));
-      text.unshift(longword.substring(0, longword.length/2));
+      wordsSplit.unshift({text:longword.text.substring(longword.text.length/2, longword.text.length), link: longword.link, href: longword.href, onclick: longword.onclick});
+      wordsSplit.unshift({text:longword.text.substring(0, longword.text.length/2), link: longword.link, href: longword.href, onclick: longword.onclick});
     } else {
       lines.push(pad(line, width, ' '));
       line = '';
@@ -263,7 +276,7 @@ function wrap(text, width){
   }
   lines.push(pad(line, width, ' '));
   return lines;
-} 
+}
 function pad(line, length, character){
   if(line.length < 1) line = ' ';
   while(strip(line).length < length){
@@ -322,8 +335,9 @@ function doTabs(){
   }
   var spans = document.body.querySelectorAll("span");
   for(var i = 0; i < spans.length; i++){
-    if(spans[i].style.display == 'none')
+    if(spans[i].style.display == 'none'){
       document.body.removeChild(spans[i]);
+    }
   }
 }
 function calculate(){ //Calculate page size in characters, and render page
@@ -345,7 +359,7 @@ function calculate(){ //Calculate page size in characters, and render page
   build();
   document.body.innerHTML = text;
   doTabs();
-  addPopups2();
+  addPopups();
 }
 function navpopup(){
   var lines = text.split('\n');
@@ -389,6 +403,7 @@ function openPopup(key){
 function closePopup(){
   for(var key in globalPopups){
     globalPopups[key].active = false;
+    if(globalPopups[key].functionClose) eval(globalPopups[key].functionClose);
   }
   calculate();
 }
@@ -414,3 +429,42 @@ function getSquare(width, string, cross){
   finished.push(' ' + new Array(width -1).join('&#175;') + ' ');
   return finished;
 }
+function splitText(content){
+  var wordsRaw = content.split(' ');
+  var words = [];
+  var link = false;
+  var totalWord = "";
+  for(var x = 0; x< wordsRaw.length; x++){
+    var word = wordsRaw[x];
+    if(word.indexOf('<a') != -1){
+      if(word.length > 2){
+        words.push({text: strip(word.substring(0,word.indexOf('<a'))), link: link});
+        word = word.substring(word.indexOf('<a'), word.length);
+      }
+      link = true;
+      onclick = "";
+      totalWord = word;
+      continue;
+    }
+    if(!link){
+      words.push({text: strip(word), link: link});
+      continue;
+    }
+    totalWord += ' ' + word;
+    if(word.indexOf('href=') != -1){
+      var href = word.substring(6,word.length);
+      href = href.substring(0, href.indexOf('"'));
+    }
+    if(word.indexOf('onclick=') != -1){
+      var onclick = word.substring(8,word.length);
+      onclick = onclick.substring(0, onclick.indexOf('>'));
+    }
+    if(word.indexOf("</a>") != -1){
+      link = false;
+      var links = strip(totalWord).split(' ');
+      for(var y = 0; y < links.length; y++)
+        words.push({text: links[y], link: true, href: href, onclick: onclick});
+    } 
+  }
+  return words;
+} 

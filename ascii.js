@@ -58,14 +58,14 @@ function navbar(brand, links){
     if(links[index].text.length > maxLength) maxLength = links[index].text.length;
   }
   for(var index in links)
-    mobile.push(pad('<a href="'+links[index].link + '">'+links[index].text + '</a>', maxLength, ' '));
+    mobile.push(pad('<a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a>', maxLength, ' '));
 
   var startBrand = Math.floor(fullwidth / 10);
   var finished = new Array(startBrand + 1).join(' ') + brand;
   if(linkLength + brand.length + 4*startBrand < fullwidth) {
     finished += new Array(Math.floor(fullwidth-linkLength-brand.length-((links.length+1)*startBrand))).join(' ');
     for(var index in links){
-      finished += (links[index].active)? '['+links[index].text+']' : '<a href="'+links[index].link + '">'+links[index].text + '</a>';
+      finished += (links[index].active)? '['+links[index].text+']' : '<a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a>';
       finished += new Array(startBrand + 1).join(' ')
     }
   } else {
@@ -94,18 +94,19 @@ function write(content, padChar, tabname){
 //-----------------------------------------------------------------------------
 //  Write two paragraphs in columns to the page
 //  Switches to rows when page width < wrapamount
-function columns(text1, text2, tabname, wrapamount){
+function columns(text1, text2, tabname, wrapamount, seperate){
   var wrapAt = (typeof wrapamount != 'undefined')? wrapamount : 50;
   if(fullwidth < wrapAt){
     write(text1,'|',tabname);
-    write(' ','|',tabname);
+    if(seperate)
+      write(' ','|',tabname);
     write(text2,'|',tabname);
     return;
   }
   var availableWidth = pageWidth - 8;
   var width1 = Math.floor(availableWidth/2);
   var width2 = availableWidth - width1;
-  var lines1 = wrap(text1, width1);
+  var lines1 = wrap(text1, width1, true);
   var lines2 = wrap(text2, width2);
   var total = '';
   while(lines1.length > 0 || lines2.length > 0){
@@ -211,42 +212,127 @@ function blankLine(){ linesArray.push({content: new Array(fullwidth + 1).join(' 
 //
 //-----------------------------------------------------------------------------
 //  On load, get configurations and initialise variables
-/*function init(){
+function init(){
   activeTabs = []; 
   globalTabs = {};
   globalPopups = {}; 
   globalPopovers = {}; 
-  configuration = (typeof config !== 'undefined')? config : {};
-  configuration.width = (typeof config.width !== 'undefined')? config.width : 700;
+  website.width = (typeof website.width !== 'undefined')? website.width : 700;
   document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-family:\'Courier New\', Courier, monospace;font-size: 16px;';
-  configuration.charWidth = getCharacterWidth();
-  configuration.lineHeight = getLineHeight();
+  website.charWidth = getCharacterWidth();
+  website.lineHeight = getLineHeight();
   calculate();
 }
 //-----------------------------------------------------------------------------
 //  Set fullwidth = screen width in characters, pageWidth = content width in characters
 function getWidth(){
-  if(window.innerWidth > configuration.width && window.innerWidth/configuration.charWidth > 50){
-    fullwidth =  Math.floor(window.innerWidth/configuration.charWidth);
-    pageWidth = Math.floor(configuration.width/configuration.charWidth);
+  if(window.innerWidth > website.width && window.innerWidth/website.charWidth > 50){
+    fullwidth =  Math.floor(window.innerWidth/website.charWidth);
+    pageWidth = Math.floor(website.width/website.charWidth);
     globalLeftPadding = Math.floor((fullwidth-pageWidth)/2);
     globalRightPadding = fullwidth - pageWidth - globalLeftPadding;
   }else {
     globalLeftPadding = globalRightPadding = 1;
-    pageWidth = fullwidth = Math.floor(window.innerWidth/configuration.charWidth) ;
-    //pageWidth++;
+    pageWidth = fullwidth = Math.floor(window.innerWidth/website.charWidth) ;
   }
 }
 //-----------------------------------------------------------------------------
 // Called to draw the page whenever the size changes
 function calculate(){ 
-  linesArray =  [];
   activeTabs = getActiveTabs();
   getWidth();
   build();
   addPopups();
   writeLines()
-}*/
+}
+//-----------------------------------------------------------------------------
+//  Changes page to pageName
+function changePage(pageName){
+  pageTitle = pageName;
+  build();
+  writeLines(); 
+}
+//-----------------------------------------------------------------------------
+//  Parse website json and build page
+function build(){
+  pageTitle = (typeof pageTitle != 'undefined')? pageTitle : website.pages[0].title;
+  document.title = pageTitle;
+
+  //Navbar 
+  linesArray = [];
+  var links = [];
+  var thisPage;
+  for(var i = 0; i < website.pages.length; i++){
+    var page = website.pages[i];
+    var title = page.title;
+    var link = page.link;
+    if(title == pageTitle) thisPage = page;
+    links.push({text: title, link: link, active: (title == pageTitle)});
+  }
+  var brand = website.name;
+  navbar(brand, links);
+
+  //Page title
+  blankLine();
+  write(pageTitle, ' ')
+
+  //Tabs
+  if(thisPage.tabs.length > 1){
+    var links = [];
+    for(var x = 0; x < thisPage.tabs.length; x++){
+      links.push({text: thisPage.tabs[x].tabName, link: thisPage.tabs[x].tabName.toLowerCase(), active: (x == 0)});
+    }
+    var tabsInfo = {
+      key: 'tabs' + pageTitle,
+      links: links,
+      topPadding: ' ',
+      bottomPadding: '|'
+    }
+    tabs(tabsInfo);
+  } else {
+    drawLine('_');
+    write(' ');
+  }
+  
+  //Content
+  for(var x = 0; x < thisPage.tabs.length; x++){
+    var tab = thisPage.tabs[x];
+    write(' > '+tab.title, '|', 'tabs' + pageTitle + tab.tabName.toLowerCase());
+    write('', '|', 'tabs' + pageTitle + tab.tabName.toLowerCase());
+    var content = (tab.content)?tab.content: [];
+    for(var y = 0; y < content.length; y++){
+      if(typeof content[y] == 'string')
+        write(content[y], '|', 'tabs'+ pageTitle + tab.tabName.toLowerCase());
+      else {
+        switch(content[y].type){
+          case 'columns':
+            columns(content[y].text1, content[y].text2, 'tabs' + pageTitle + tab.tabName.toLowerCase(), null);
+            break;
+        }
+      }
+      if(typeof content[y].seperate == 'undefined' || content[y].seperate)
+        write('', '|', 'tabs' + pageTitle + tab.tabName.toLowerCase());
+    }
+  }
+  //Finish
+  drawLine('&#175;');
+
+  //Popups
+  if(thisPage.popups){
+    for(var x = 0; x < thisPage.popups.length; x++){
+      var popupInfo = thisPage.popups[x];
+      popup(x+1, popupInfo.title, popupInfo.width, popupInfo.position);
+    }
+  }
+
+  //Pop-overs
+  if(thisPage.popovers){
+    for(var x = 0; x < thisPage.popovers.length; x++){
+      var popoverInfo = thisPage.popovers[x];
+      popover(popoverInfo.key, popoverInfo.content, popoverInfo.width);
+    }
+  }
+}
 //-----------------------------------------------------------------------------
 //  Returns the height of one line in pixels
 function getLineHeight(){
@@ -292,7 +378,7 @@ function writeLines(){
 //
 //-----------------------------------------------------------------------------
 //  Wraps a text string into lines of given width
-function wrap(content, width){
+function wrap(content, width, alignRight){
   var wordsSplit = splitText(content);
   var lines = [];
   var line = '';
@@ -302,7 +388,7 @@ function wrap(content, width){
       if(word.link) line += '<a href="' + word.href + '"' +((word.onclick)? ' onclick=' + word.onclick : '') + ((word.onmouseenter)? ' onmouseenter=' + word.onmouseenter : '') + ((word.onmouseleave)? ' onmouseleave=' + word.onmouseleave : '')+ ">" + word.text + "</a> ";
       else line += word.text + ' ';
       if(line.indexOf('\n') != -1){
-        lines.push(pad(line.substring(0, line.indexOf('\n')), width, ' '));
+        lines.push(pad(line.substring(0, line.indexOf('\n')), width, ' ', alignRight));
         line = '';
       }
     } else if(strip(wordsSplit[0].text).length >= width ){
@@ -310,19 +396,25 @@ function wrap(content, width){
       wordsSplit.unshift({text:longword.text.substring(longword.text.length/2, longword.text.length), link: longword.link, href: longword.href, onclick: longword.onclick});
       wordsSplit.unshift({text:longword.text.substring(0, longword.text.length/2), link: longword.link, href: longword.href, onclick: longword.onclick});
     } else {
-      lines.push(pad(line, width, ' '));
+      lines.push(pad(line, width, ' ', alignRight));
       line = '';
     }
   }
-  lines.push(pad(line, width, ' '));
+  lines.push(pad(line, width, ' ', alignRight));
   return lines;
 }
 //-----------------------------------------------------------------------------
 //  Pads a string to a given length with a given character
-function pad(line, length, character){
+function pad(line, length, character, alignRight){
   if(line.length < 1) line = ' ';
-  while(strip(line).length < length){
-    line += character;
+  if(alignRight){
+    while(strip(line).length < length){
+      line = character + line;
+    }
+  } else {
+    while(strip(line).length < length){
+      line += character;
+    }
   }
   return line;
 }
@@ -424,19 +516,15 @@ function addPopups(){
       var square = getSquare(popup.size, popup.content, true);
       var startH = Math.floor((Math.floor(window.innerHeight / getLineHeight()) - square.length)/popup.position);
       var startW = Math.floor((fullwidth - popup.size)/2);
-      for(var x = 0; x < startH + square.length || x < linesArray.length; x++){
+      for(var x =  startH; square.length > 0 || x < linesArray.length-1; x++){
+        var tabName = (typeof linesArray[x] != 'undefined')? linesArray[x].tab : undefined;
         var line = (x < linesArray.length)? strip(linesArray[x].content) : pad(' ', fullwidth, ' '); 
-        if(typeof line.tab == 'undefined' || activeTabs.indexOf(line.tab) >= 0){
-          if(x >= startH && x < startH + square.length){
-            line = line.substring(0, startW) + square[x-startH] + line.substring(startW + popup.size, line.length) ;
-          }
-          if(linesArray[x])
-            linesArray[x].content = line;
-          else 
-            linesArray.push({content: line})
+        if(typeof tabName == 'undefined' || activeTabs.indexOf(tabName) >= 0 && square.length > 0){
+          line = line.substring(0, startW) + square.shift() + line.substring(startW + popup.size, line.length) ;
+          if(linesArray[x]) linesArray[x].content = line;
+          else linesArray.push({content: line})
         }
       }
-      //if(typeof popup.function != 'undefined') eval(popup.function);
     }
   }
 }

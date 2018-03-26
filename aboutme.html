@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<head>
+	<style>
+
+	</style>
+</head>
+<body>
+	<script src='ascii.js'></script>
+	<script>
+	var config = { width: 600};
+  function build(){
+    //Navbar
+    var links = [
+      { text: 'About Me', link: '#', active: true },
+      { text: 'Web Projects', link: 'projects.html', active: false },
+    ];
+    navbar('HarryBP', links);
+
+    //Title
+    blankLine();
+    write('About Me', ' ')
+
+    //Tabs
+    var links = [
+      { text: 'Info', active: true, link: 'info' },
+      { text: 'Contact', active: false, link: 'cont' },
+    ];
+    var tabsInfo = { 
+      key: 'main', 
+      links: links,
+      topPadding: ' ',
+      bottomPadding: '|',
+    }
+    tabs(tabsInfo);
+
+    //Info tab contents
+    write('Information', '|', 'maininfo');
+    write(' ', '|', 'maininfo');
+    var text = 'I am a 20 year old Computer Science student from <a href="#" onmouseenter=openPopover("uom")>UoM</a> in my final year of studies after a placement position at HSBC in Hong Kong. I am interested in developer roles in a fast paced company.';
+    write(text, '|', 'maininfo');
+    popover('uom', 'The University of Manchester', 15);
+    write(' ', '|', 'maininfo');
+   
+    //Contact Tab contents
+    write('Contact Me', '|', 'maincont');
+    write(' ', '|', 'maincont');
+
+     drawLine('&#175;');
+
+  }
+	</script>
+</body>
+</html>

@@ -8,17 +8,22 @@
 	<script src='experimental.js'></script>
 	<script src='ascii.js'></script>
 	<script>
-		var config = { width: 900};
+		var config = { width: 600};
 //
 //  Define page structure with build() method
       function build(){
+        //Navbar
         var links = [
-          { text: 'About Me', link: '#', active: false },
+          { text: 'About Me', link: 'aboutme.html', active: false },
           { text: 'Web Projects', link: '#', active: true },
         ];
         navbar('HarryBP', links);
+
+        //Title
         blankLine();
         write('Web Projects', ' ')
+
+        //Tabs
         var links = [
           { text: 'Games', active: true, link: 'games' },
           { text: 'Other', active: false, link: 'other' },
@@ -30,24 +35,31 @@
           bottomPadding: '|',
         }
         tabs(tabsInfo);
+
+        //Game tab content
         write('Games', '|', 'wpgames');
         write(' ', '|', 'wpgames');
-        write('I have made two HTML5 <a href="#" onclick=popover("asha")>games</a> in the past year, both are unfinished but playable..', '|', 'wpgames');
-
-        write('Other', '|', 'wpother');
-        write('');
+        write('I have made two HTML5 games in the past year, both are unfinished but playable..', '|', 'wpgames');
+        write(' ','|','wpgames')
         var text1 = '- Zombie Run \n A side scrolling run-and-shoot type game. My first attempt at building a HTML5 game. \n <a href="#" onclick=openPopup("one")>Click</a> to Play';
         var text2 = '- Bounce \n Keep the ball from escaping! My second game, simpler but more mathematically complex. \n <a href="#" onclick=openPopup("two")>Click</a> to Play';
         columns(text1, text2, 'wpgames');
         write(' ', '|', 'wpgames');
         write('More games coming soon most likely..', '|', 'wpgames');
         write(' ', '|', 'wpgames');
+
+        //Other tab content
+        write('Other', '|', 'wpother');
+
+        write('');
         drawLine('&#175;', false, 2);
-        var popup1 = 'Zombie Run!';
-        popup('one', 'Zombie Run!', 50, 5,'createCanvasTiles((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());', 'stopGame();');
-        popup('two', 'Bounce!',50, 5, 'createCanvasRotate((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());', 'stopGameTiles();');
+      
+        //Define popovers and popups
+        popup('one', 'Zombie Run!', 35, 2);
+        popup('two', 'Bounce!',38, 3);
+        popover('one', 'This is a test', 10);
       }
 	</script>
-	<script src= 'rotateGame.js'></script>
-	<script src= 'tiles.js'></script>
+	<!--<script src= 'rotateGame.js'></script>-->
+	<!--<script src= 'tiles.js'></script>-->
 </body>

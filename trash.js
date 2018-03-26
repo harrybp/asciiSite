@@ -5,7 +5,20 @@
 //    '---' 
 //-----------------------------------------------------------------------------
 
-
+function navpopup(){
+  var lines = text.split('\n');
+  var width = 0;
+  for(var x = 0; x < globalNav.links.length; x++)
+    if(globalNav.links[x].text.length > width) width = globalNav.links[x].text.length;
+  var startBrand = Math.floor(fullwidth / 10) ;
+  lines[1] = new Array(startBrand + 1).join(' ') + globalNav.brand + new Array(fullwidth-width-startBrand-globalNav.brand.length-2).join(' ') + new Array(width - startBrand + 1).join('_') + '[<a href="#", onclick="calculate()">X</a>]' + new Array(startBrand).join('_')
+  for(var x = 0; x < globalNav.links.length; x++){
+    lines[x+2] = lines[x+2].substring(0, fullwidth - width - 4) + '| ' + pad((globalNav.links[x].active)? globalNav.links[x].text : '<a href="'+globalNav.links[x].link + '">'+globalNav.links[x].text + '</a>', width, ' ') + " |";
+  }
+  lines[globalNav.links.length+2] = lines[x+2].substring(0, fullwidth - width - 4) + ' ' + new Array(width+3).join('&#175;') + " ";
+  document.body.innerHTML = lines.join('\n');
+  doTabs();
+}
 
 //-----------------------------------------------------------------------------
 //  Writes given text aligned at certain place of screen

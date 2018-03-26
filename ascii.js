@@ -1,73 +1,32 @@
 //-----------------------------------------------------------------------------
 //  ASCII Webpage
 //    - By HarryBP
-//
-//  Override properties with config
-//  DEFAULTS =    width:  700
-/*      var config = { width: 900};
-//
-//  Define page structure with build() method
-      function build(){
-        var links = [
-          { text: 'About Me', link: '#', active: false },
-          { text: 'Web Projects', link: '#', active: true },
-        ];
-        navbar('HarryBP', links);
-        blankLine();
-        write('Web Projects', ' ')
-        var links = [
-          { text: 'Games', active: true, link: 'games' },
-          { text: 'Other', active: false, link: 'other' },
-          { text: 'More', active: false, link: 'otheer' }
-        ];
-        var tabsInfo = { 
-          key: 'wp', 
-          links: links,
-          topPadding: ' ',
-          bottomPadding: '|',
-        }
-        tabs(tabsInfo);
-        write('Games', '|', 'wpgames');
-        write(' ', '|', 'wpgames');
-        write('<a href="#">past</a> I have made two HTML5 games in the year, both are unfinished but playable..', '|', 'wpgames');
-
-        write('Other', '|', 'wpother');
-        write('');
-        var text1 = '- Zombie Run \n A side scrolling run-and-shoot type game. My first attempt at building a HTML5 game. \n <a href="#" onclick=openPopup("one")>Click</a> to Play';
-        var text2 = '- Bounce \n Keep the ball from escaping! My second game, simpler but more mathematically complex. \n <a href="#" onclick=openPopup("two")>Click</a> to Play';
-        columns(text1, text2, 'wpgames');
-        write(' ', '|', 'wpgames');
-        write('More games coming soon most likely..', '|', 'wpgames');
-        write(' ', '|', 'wpgames');
-        drawLine('&#175;', false, 2);
-        var popup1 = 'Zombie Run!';
-        popup('one', 'Zombie Run!', 50, 5,'createCanvasTiles((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());', 'stopGame();');
-        popup('two', 'Bounce!',50, 5, 'createCanvasRotate((popup.size-4) * getCharacterWidth(),(square.length-6) * getLineHeight(),(startW+2) * getCharacterWidth(),(startH+4) * getLineHeight());', 'stopGameTiles();');
-        //var test ='this is a test sentence blah ok';
-       // wrap2(text, 20);
-      }*/
-//
 //-----------------------------------------------------------------------------
 
 
 
 // ToDO 
-//represent lines as objects, modify them and then write to body at v end
 // Tidy some methods up
 // Popup:can add content better etc
-// Dropdown for little nav
 // need one more padding on right??
 // imstead of passing function maybe pass id of element to show?
-// Generalise dropdown method, (x,Y)
 //-----------------------------------------------------------------------------
 //               _____ _____ 
-//         /\   |  __ \_   _|     navbar(brand, links)
-//        /  \  | |__) || |       write(text)
-//       / /\ \ |  ___/ | |       columns(text1, text2)
-//      / ____ \| |    _| |_      tabs(tabsData)
-//     /_/    \_\_|   |_____|     popup(key,content,size)
+//         /\   |  __ \_   _|     popover(key, content, width)
+//        /  \  | |__) || |       popup(key, content, size, position)
+//       / /\ \ |  ___/ | |       navbar(brand, links)
+//      / ____ \| |    _| |_      write(content, padChar, tabname)
+//     /_/    \_\_|   |_____|     columns(text1, text2, tabname, wrapamount)
+//                                tabs(tabInfo)
+//                                drawLine(char, fill)
+//                                blankLine()
+//                                
 //
 //-----------------------------------------------------------------------------
+//  Add popover of specified width and content
+//  Open it with openPopup(key)
+function popover(key, content, width){ globalPopovers[key] = { content: content, width: width }; }
+
 //-----------------------------------------------------------------------------
 //  Adds a popup of width = size located 1/position of the way down the page
 //  Open with openpopup(key)
@@ -92,7 +51,15 @@ function navbar(brand, links){
   blankLine();
   globalNav = {brand: brand, links: links};
   var linkLength= 2;
-  for(var index in links){ linkLength += links[index].text.length; }
+  var maxLength = 0;
+  var mobile = [];
+  for(var index in links){ 
+    linkLength += links[index].text.length; 
+    if(links[index].text.length > maxLength) maxLength = links[index].text.length;
+  }
+  for(var index in links)
+    mobile.push(pad('<a href="'+links[index].link + '">'+links[index].text + '</a>', maxLength, ' '));
+
   var startBrand = Math.floor(fullwidth / 10);
   var finished = new Array(startBrand + 1).join(' ') + brand;
   if(linkLength + brand.length + 4*startBrand < fullwidth) {
@@ -103,9 +70,10 @@ function navbar(brand, links){
     }
   } else {
     finished += new Array(fullwidth - 2 - (2*startBrand) - brand.length).join(' ');  
-    finished += '[<a href="#", onclick="navpopup()">X</a>]';  
+    finished += '[<a href="#" onclick=openPopover("nav")>X</a>]';  
   }
-  text += finished + '\n';  
+  popover('nav', mobile, maxLength);
+  linesArray.push({content: finished});
   drawLine('_', true);
 }
 
@@ -115,10 +83,11 @@ function write(content, padChar, tabname){
   var padding = (padChar)? padChar : '|'
   var lines = wrap(content, pageWidth-5);
   for(var x = 0; x < lines.length; x++){
-    var finished = (typeof tabname !== 'undefined')? '<span class="'+tabname+'">' : '';
-    finished += getGlobalLeftPadding() + padding + ' ' + lines[x] + ' ' + padding+ '\n';
-    if(typeof tabname !== 'undefined') finished += '</span>'; 
-    text += finished ;
+    var finished = getGlobalLeftPadding() + padding + ' ' + lines[x] + ' ' + padding;
+    if(tabname)
+      linesArray.push({content: finished, tab: tabname});
+    else 
+      linesArray.push({content: finished});
   }
 }
 
@@ -144,12 +113,9 @@ function columns(text1, text2, tabname, wrapamount){
     else var line1 = lines1.shift();
     if(lines2.length == 0) var line2 = pad(' ', width2, ' '); 
     else var line2 = lines2.shift();
-    var finished = (typeof tabname !== 'undefined')? '<span class="'+tabname+'">' : '';
-    finished += getGlobalLeftPadding() + "| " + line1 + ' | ' + line2 + ' |\n';
-    if(typeof tabname !== 'undefined') finished += '</span>'; 
-    total += finished;
+    var finished = getGlobalLeftPadding() + "| " + line1 + ' | ' + line2 + ' |';
+    linesArray.push({content: finished, tab: tabname});
   }
-  text += total;
 }
 
 //-----------------------------------------------------------------------------
@@ -190,6 +156,7 @@ function tabs(tabsGiven){
     var line3Char = (tab.active)? ' ' : '&#175;';
     line3 += line3Char + new Array(tab.text.length + 2 + 1).join(line3Char);
     count += 3+ tab.text.length;
+    if(tab.active) activeTabs.push(tabsGiven.key +''+ tab.link);
   }
   line2 += '|';
   line1 += " ";
@@ -200,7 +167,9 @@ function tabs(tabsGiven){
     line1 += " ";
     line2 += " ";
   }
-  text += line1 + paddingAbove + '\n' + line2 + paddingAbove + '\n' + line3 + paddingBelow +'\n';
+  linesArray.push({content: line1 + paddingAbove});
+  linesArray.push({content: line2 + paddingAbove});
+  linesArray.push({content: line3 + paddingBelow});
 }
 
 //-----------------------------------------------------------------------------
@@ -209,48 +178,120 @@ function tabs(tabsGiven){
 function drawLine(char, fill) {
   var width = (fill)? fullwidth +1: pageWidth-2;
   var finished = (typeof fill == 'undefined' || fill == false)? getGlobalLeftPadding() + ' ' : '';
-  text += (finished + new Array(width ).join(char) + '\n');
+  finished += new Array(width ).join(char);
+  linesArray.push({content: finished});
 }
 
 //-----------------------------------------------------------------------------
 //  Writes a blank line
-function blankLine(){ text += new Array(fullwidth + 1).join(' ') + '\n'; }
+function blankLine(){ linesArray.push({content: new Array(fullwidth + 1).join(' ') }); }
+
 
 //-----------------------------------------------------------------------------
-//          ________            Helper functions:
-//      _jgN########Ngg_          wrap(text, width): 
-//    _N##N@@""  ""9NN##Np_         - wraps text to set width, returns array of lines
-//   d###P            N####p      pad(text,length,char):
-//   "^^"              T####        - pads text to set width with given char, returns padded text
-//                     d###P      strip(text):
-//                  _g###@F         - returns text with all url encoded chars and html tags stripped out
-//               _gN##@P          getGlobalLeftPadding()
-//             gN###F"              - returns a string of spaces used to pad each lines
-//            d###F               getCharacterWidth()
-//           0###F                  - returns the width in pixels of one character
-//           0###F                showTab(key,tabname)
-//          0###F                   - sets tabname tab active in the tabs menu with key = key
-//           "NN@'                doTabs()
-//                                  - shows active tab content and hides inactive tab content
-//            ___                 calculate()
-//           q###r                  - called to calculate size of and render the page
-//            ""                  navpopup()
-//                                  - shows the dropdown links for mobile navbar
-//    addPopups()
-//      - adds all active popups to the screen
-//    penPopup(key)
-//      - opens the popup with given key
-//    closePopup()
-//      - closes any open popup
-//    getLineHeight()
-//      - get height in pixels of one line of text
-//    getSquare(width, text, cross)
-//      - returns square of given width containing text (and exit btn if cross=true)
-//
-      window.onload = function(){ globalTabs = {}; globalPopups = {}; calculate(); };
-      window.onresize = function(event) { calculate(); };
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//  UTILITIES:
+//    - PAGE SETUP METHODS
+//    - TEXT HELPER METHODS 
+//    - POPUP METHODS
+//    - TAB METHODS 
+      window.onload = init;
+      window.onresize = calculate;
 //
 //-----------------------------------------------------------------------------
+//  PAGE SETUP METHODS
+//    -init()
+//    -getWidth()
+//    -calculate()
+//    -getLineHeight()
+//    -getCharacterWidth()
+//    -getGlobalLeftPadding()
+//
+//-----------------------------------------------------------------------------
+//  On load, get configurations and initialise variables
+/*function init(){
+  activeTabs = []; 
+  globalTabs = {};
+  globalPopups = {}; 
+  globalPopovers = {}; 
+  configuration = (typeof config !== 'undefined')? config : {};
+  configuration.width = (typeof config.width !== 'undefined')? config.width : 700;
+  document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-family:\'Courier New\', Courier, monospace;font-size: 16px;';
+  configuration.charWidth = getCharacterWidth();
+  configuration.lineHeight = getLineHeight();
+  calculate();
+}
+//-----------------------------------------------------------------------------
+//  Set fullwidth = screen width in characters, pageWidth = content width in characters
+function getWidth(){
+  if(window.innerWidth > configuration.width && window.innerWidth/configuration.charWidth > 50){
+    fullwidth =  Math.floor(window.innerWidth/configuration.charWidth);
+    pageWidth = Math.floor(configuration.width/configuration.charWidth);
+    globalLeftPadding = Math.floor((fullwidth-pageWidth)/2);
+    globalRightPadding = fullwidth - pageWidth - globalLeftPadding;
+  }else {
+    globalLeftPadding = globalRightPadding = 1;
+    pageWidth = fullwidth = Math.floor(window.innerWidth/configuration.charWidth) ;
+    //pageWidth++;
+  }
+}
+//-----------------------------------------------------------------------------
+// Called to draw the page whenever the size changes
+function calculate(){ 
+  linesArray =  [];
+  activeTabs = getActiveTabs();
+  getWidth();
+  build();
+  addPopups();
+  writeLines()
+}*/
+//-----------------------------------------------------------------------------
+//  Returns the height of one line in pixels
+function getLineHeight(){
+   var temp = document.createElement(document.body.nodeName);
+   temp.setAttribute("style","margin:0px;padding:0px;font-family:"+document.body.style.fontFamily+";font-size:"+document.body.style.fontSize);
+   temp.innerHTML = "test";
+   temp = document.body.parentNode.appendChild(temp);
+   var ret = temp.clientHeight;
+   temp.parentNode.removeChild(temp);
+   return ret;
+}
+//-----------------------------------------------------------------------------
+//  Returns the width of one character in pixels
+function getCharacterWidth(){ //Get the width of one monospaced character
+  var sizingSpan = document.createElement("span");
+  sizingSpan.innerHTML = '--------------------';
+  sizingSpan.style.cssText += 'position: absolute; top: -100px; padding: 0px;';
+  document.body.insertBefore(sizingSpan, document.body.firstChild);
+  var width = sizingSpan.clientWidth/20;
+  sizingSpan.parentNode.removeChild(sizingSpan);
+  return width;
+}
+//-----------------------------------------------------------------------------
+//  Returns the padding applied to left of all lines
+function getGlobalLeftPadding(){ return new Array(globalLeftPadding).join(' '); }
+//-----------------------------------------------------------------------------
+//  Writes all lines to the page
+function writeLines(){
+  var total = '';
+  for(var x = 0; x < linesArray.length; x++){
+    if(typeof linesArray[x].tab == 'undefined' || activeTabs.indexOf(linesArray[x].tab) >= 0)
+      total += linesArray[x].content + '\n';
+  }
+  document.body.innerHTML = total;
+}
+
+//-----------------------------------------------------------------------------
+//  TEXT HELPER METHODS
+//    -wrap()
+//    -pad()
+//    -strip()
+//    -splitText()
+//
+//-----------------------------------------------------------------------------
+//  Wraps a text string into lines of given width
 function wrap(content, width){
   var wordsSplit = splitText(content);
   var lines = [];
@@ -258,7 +299,7 @@ function wrap(content, width){
   while(wordsSplit.length > 0){
     if(strip(line).length + strip(wordsSplit[0].text).length < width){
       var word = wordsSplit.shift();
-      if(word.link) line += '<a href="' + word.href + '" onclick=' + word.onclick + ">" + word.text + "</a> ";
+      if(word.link) line += '<a href="' + word.href + '"' +((word.onclick)? ' onclick=' + word.onclick : '') + ((word.onmouseenter)? ' onmouseenter=' + word.onmouseenter : '') + ((word.onmouseleave)? ' onmouseleave=' + word.onmouseleave : '')+ ">" + word.text + "</a> ";
       else line += word.text + ' ';
       if(line.indexOf('\n') != -1){
         lines.push(pad(line.substring(0, line.indexOf('\n')), width, ' '));
@@ -266,7 +307,6 @@ function wrap(content, width){
       }
     } else if(strip(wordsSplit[0].text).length >= width ){
       var longword = wordsSplit.shift();
-      console.log(longword);
       wordsSplit.unshift({text:longword.text.substring(longword.text.length/2, longword.text.length), link: longword.link, href: longword.href, onclick: longword.onclick});
       wordsSplit.unshift({text:longword.text.substring(0, longword.text.length/2), link: longword.link, href: longword.href, onclick: longword.onclick});
     } else {
@@ -277,6 +317,8 @@ function wrap(content, width){
   lines.push(pad(line, width, ' '));
   return lines;
 }
+//-----------------------------------------------------------------------------
+//  Pads a string to a given length with a given character
 function pad(line, length, character){
   if(line.length < 1) line = ' ';
   while(strip(line).length < length){
@@ -284,6 +326,8 @@ function pad(line, length, character){
   }
   return line;
 }
+//-----------------------------------------------------------------------------
+//  Removes all html tags and url encodings from a string
 function strip(text){
   var div = document.createElement("div");
   div.innerHTML = text;
@@ -294,141 +338,8 @@ function strip(text){
   }
   return text.replace(/ /g, ' ');
 }
-function getGlobalLeftPadding(){ //Calculate number of spaces to begin each line
-  var text = '';
-  for(var x = 0; x < globalLeftPadding; x++) text += ' ';
-  return text;
-}
-function getCharacterWidth(){ //Get the width of one monospaced character
-  var sizingSpan = document.createElement("span");
-  sizingSpan.innerHTML = '--------------------';
-  sizingSpan.style.cssText += 'position: absolute; top: -100px; padding: 0px;';
-  document.body.insertBefore(sizingSpan, document.body.firstChild);
-  var width = sizingSpan.clientWidth/20;
-  sizingSpan.parentNode.removeChild(sizingSpan);
-  return width;
-}
-function showTab(key, tabname){
-  for(var tabIndex in globalTabs[key].links){
-    if(globalTabs[key].links[tabIndex].link == tabname)
-      globalTabs[key].links[tabIndex].active = true;
-    else 
-      globalTabs[key].links[tabIndex].active = false;
-  }
-  calculate();
-}
-function doTabs(){
-  for(var index in globalTabs){
-    var tabs = globalTabs[index];
-    for(var index2 in tabs.links){
-      var link = tabs.links[index2];
-      var content = document.getElementsByClassName(tabs.key + "" + link.link);
-      for(var itemIndex = 0; itemIndex < content.length; itemIndex++){
-        var tabItem = content[itemIndex];
-        if(link.active){
-          tabItem.style.display = 'inline';
-        } else {
-          tabItem.style.display = 'none';
-        }
-      }
-    }
-  }
-  var spans = document.body.querySelectorAll("span");
-  for(var i = 0; i < spans.length; i++){
-    if(spans[i].style.display == 'none'){
-      document.body.removeChild(spans[i]);
-    }
-  }
-}
-function calculate(){ //Calculate page size in characters, and render page
-  var configuration = (typeof config !== 'undefined')? config : {};
-  configuration.width = (typeof config.width !== 'undefined')? config.width : 700;
-  document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-family:\'Courier New\', Courier, monospace;font-size: 16px;';
-  text = '';
-  document.body.innerHTML = '';
-  var charWidth = getCharacterWidth();
-  if(window.innerWidth > configuration.width && window.innerWidth/charWidth > 50){
-    fullwidth =  Math.floor(window.innerWidth/charWidth);
-    pageWidth = Math.floor(configuration.width/charWidth);
-    globalLeftPadding = Math.floor((fullwidth-pageWidth)/2);
-    globalRightPadding = fullwidth - pageWidth - globalLeftPadding;
-  }else {
-    globalLeftPadding = globalRightPadding = 1;
-    pageWidth = fullwidth = Math.floor(window.innerWidth/charWidth) ;
-  }
-  build();
-  document.body.innerHTML = text;
-  doTabs();
-  addPopups();
-}
-function navpopup(){
-  var lines = text.split('\n');
-  var width = 0;
-  for(var x = 0; x < globalNav.links.length; x++)
-    if(globalNav.links[x].text.length > width) width = globalNav.links[x].text.length;
-  var startBrand = Math.floor(fullwidth / 10) ;
-  lines[1] = new Array(startBrand + 1).join(' ') + globalNav.brand + new Array(fullwidth-width-startBrand-globalNav.brand.length-2).join(' ') + new Array(width - startBrand + 1).join('_') + '[<a href="#", onclick="calculate()">X</a>]' + new Array(startBrand).join('_')
-  for(var x = 0; x < globalNav.links.length; x++){
-    lines[x+2] = lines[x+2].substring(0, fullwidth - width - 4) + '| ' + pad((globalNav.links[x].active)? globalNav.links[x].text : '<a href="'+globalNav.links[x].link + '">'+globalNav.links[x].text + '</a>', width, ' ') + " |";
-  }
-  lines[globalNav.links.length+2] = lines[x+2].substring(0, fullwidth - width - 4) + ' ' + new Array(width+3).join('&#175;') + " ";
-  document.body.innerHTML = lines.join('\n');
-  doTabs();
-}
-function addPopups(){  
-  for(var x in globalPopups){
-    if(globalPopups[x].active){
-      var lines = document.body.innerHTML.split('\n');
-      var finished = '';
-      var popup = globalPopups[x];
-      var square = getSquare(popup.size, popup.content, true);
-      var startH = Math.floor((Math.floor(window.innerHeight / getLineHeight()) - square.length)/popup.position);
-      var startW = Math.floor((fullwidth - popup.size)/2);
-      for(var x = 0; x < startH + square.length || x < lines.length; x++){
-        var line = (x < lines.length-1)? strip(lines[x]) + '\n' : pad(' ', fullwidth, ' ') + '\n'; 
-        if(x >= startH && x < startH + square.length){
-          line = line.substring(0, startW) + square[x-startH] + line.substring(startW + popup.size, line.length) ;
-        }
-        finished += line;
-      }
-      document.body.innerHTML = finished;
-      if(typeof popup.function != 'undefined') eval(popup.function);
-    }
-  }
-}
-function openPopup(key){
-  globalPopups[key].active = true;
-  calculate();
-}
-function closePopup(){
-  for(var key in globalPopups){
-    globalPopups[key].active = false;
-    if(globalPopups[key].functionClose) eval(globalPopups[key].functionClose);
-  }
-  calculate();
-}
-function getLineHeight(){
-   var temp = document.createElement(document.body.nodeName);
-   temp.setAttribute("style","margin:0px;padding:0px;font-family:"+document.body.style.fontFamily+";font-size:"+document.body.style.fontSize);
-   temp.innerHTML = "test";
-   temp = document.body.parentNode.appendChild(temp);
-   var ret = temp.clientHeight;
-   temp.parentNode.removeChild(temp);
-   return ret;
-}
-function getSquare(width, string, cross){
-  var height = Math.floor(width * getCharacterWidth() /getLineHeight());
-  var finished = [];
-  var content = wrap(string, width - 4)
-  finished.push(' ' + new Array(width -1).join('_') + ' ');
-  for(var x = 1; x < height-1; x++){
-    var thisLine = (content[x-2])? content[x-2] : pad(' ', width - 4, ' ');
-    if(cross && x == 1) finished.push("|" +  new Array(width - 4).join(' ') + '[<a href="#", onclick="closePopup()">X</a>]|');
-    else finished.push("| " +  thisLine+ ' |');
-  }
-  finished.push(' ' + new Array(width -1).join('&#175;') + ' ');
-  return finished;
-}
+//-----------------------------------------------------------------------------
+//  Splits a string into an array of word objects with link info
 function splitText(content){
   var wordsRaw = content.split(' ');
   var words = [];
@@ -457,14 +368,176 @@ function splitText(content){
     }
     if(word.indexOf('onclick=') != -1){
       var onclick = word.substring(8,word.length);
-      onclick = onclick.substring(0, onclick.indexOf('>'));
+      var index = (onclick.indexOf('>') > -1)? onclick.indexOf('>') : onclick.indexOf(' ');
+      onclick = onclick.substring(0, index);
+    }
+    if(word.indexOf('onmouseenter=') != -1){
+      var onmouseenter = word.substring(13,word.length);
+      var index = (onmouseenter.indexOf('>') > -1)? onmouseenter.indexOf('>') : onmouseenter.indexOf(' ');
+      onmouseenter = onmouseenter.substring(0, index);
+    }
+    if(word.indexOf('onmouseleave=') != -1){
+      var onmouseleave = word.substring(13,word.length);
+      var index = (onmouseleave.indexOf('>') > -1)? onmouseleave.indexOf('>') : onmouseleave.indexOf(' ');
+      onmouseleave = onmouseleave.substring(0, index);
     }
     if(word.indexOf("</a>") != -1){
       link = false;
       var links = strip(totalWord).split(' ');
       for(var y = 0; y < links.length; y++)
-        words.push({text: links[y], link: true, href: href, onclick: onclick});
+        words.push({text: links[y], link: true, href: href, onclick: onclick, onmouseenter: onmouseenter, onmouseleave: onmouseleave});
     } 
   }
   return words;
 } 
+
+//-----------------------------------------------------------------------------
+//  POPUP METHODS
+//    -openPopup()
+//    -closePopup()
+//    -addPopups()
+//    -getSquare()
+//
+//-----------------------------------------------------------------------------
+//  Sets a given popup to active
+function openPopup(key){
+  globalPopups[key].active = true;
+  calculate();
+}
+//-----------------------------------------------------------------------------
+//  Sets all popups to inactive
+function closePopup(){
+  for(var key in globalPopups){
+    globalPopups[key].active = false;
+   // if(globalPopups[key].functionClose) eval(globalPopups[key].functionClose);
+  }
+  calculate();
+}
+//-----------------------------------------------------------------------------
+//  Adds all active popups to the page
+function addPopups(){  
+  for(var x in globalPopups){
+    if(globalPopups[x].active){
+      var activeTabs = getActiveTabs();
+      var finished = '';
+      var popup = globalPopups[x];
+      var square = getSquare(popup.size, popup.content, true);
+      var startH = Math.floor((Math.floor(window.innerHeight / getLineHeight()) - square.length)/popup.position);
+      var startW = Math.floor((fullwidth - popup.size)/2);
+      for(var x = 0; x < startH + square.length || x < linesArray.length; x++){
+        var line = (x < linesArray.length)? strip(linesArray[x].content) : pad(' ', fullwidth, ' '); 
+        if(typeof line.tab == 'undefined' || activeTabs.indexOf(line.tab) >= 0){
+          if(x >= startH && x < startH + square.length){
+            line = line.substring(0, startW) + square[x-startH] + line.substring(startW + popup.size, line.length) ;
+          }
+          if(linesArray[x])
+            linesArray[x].content = line;
+          else 
+            linesArray.push({content: line})
+        }
+      }
+      //if(typeof popup.function != 'undefined') eval(popup.function);
+    }
+  }
+}
+//-----------------------------------------------------------------------------
+//  Returns the lines of a square with a given width and contents
+//  Used for the popup body
+function getSquare(width, string, cross){
+  var height = Math.floor(width * getCharacterWidth() /getLineHeight());
+  var finished = [];
+  var content = wrap(string, width - 4)
+  finished.push(' ' + new Array(width -1).join('_') + ' ');
+  for(var x = 1; x < height-1; x++){
+    var thisLine = (content[x-2])? content[x-2] : pad(' ', width - 4, ' ');
+    if(cross && x == 1) finished.push("|" +  new Array(width - 4).join(' ') + '[<a href="#", onclick="closePopup()">X</a>]|');
+    else finished.push("| " +  thisLine+ ' |');
+  }
+  finished.push(' ' + new Array(width -1).join('&#175;') + ' ');
+  return finished;
+}
+
+//-----------------------------------------------------------------------------
+//  TAB METHODS
+//    -showTab()
+//    -getActiveTabs()
+//-----------------------------------------------------------------------------
+//  Sets a given tab to active
+function showTab(key, tabname){ 
+  for(var tabIndex in globalTabs[key].links){
+    if(globalTabs[key].links[tabIndex].link == tabname){
+      globalTabs[key].links[tabIndex].active = true;
+    } else {
+      globalTabs[key].links[tabIndex].active = false;
+    }
+  }
+  calculate();
+}
+//-----------------------------------------------------------------------------
+//  Returns array of active tabs
+function getActiveTabs(){
+  var activeTabs = [];
+  for(var index in globalTabs)
+    for(var index2 in globalTabs[index].links)
+      if(globalTabs[index].links[index2].active)
+        activeTabs.push(globalTabs[index].key + "" + globalTabs[index].links[index2].link);
+  return activeTabs;
+}
+//-----------------------------------------------------------------------------
+//  POPOVER METHODS
+//    -openPopover()
+//-----------------------------------------------------------------------------
+//  Shows the popover with the selected key
+function openPopover(key){
+  var width = (globalPopovers[key].width > fullwidth - 4)? fullwidth - 4 : globalPopovers[key].width;
+  var data = (typeof globalPopovers[key].content == 'string')? wrap(globalPopovers[key].content, width) : globalPopovers[key].content;
+  var writing = false;
+  var click = false;
+  var startData, endData, difference;
+  for(var x = 0; x < linesArray.length; x++){
+    var start = linesArray[x].content.indexOf('<a href="#" onmouseenter=openPopover("'+ key + '")');
+    if(start == -1 && linesArray[x].content.indexOf('<a href="#" onclick=openPopover("'+ key + '")') != -1){
+      start = linesArray[x].content.indexOf('<a href="#" onclick=openPopover("'+ key + '")');
+      click = true;
+    }
+    if(start >= 0){
+      var end = linesArray[x].content.substring(start,linesArray[x].content.length);
+      end = end.indexOf('</a>')+4+start;
+      var linkText = strip(linesArray[x].content.substring(start,end));
+      var padLeft = Math.floor((width - linkText.length) / 2);
+      var padRight = width - linkText.length - padLeft;
+      if(start - padLeft < 0){
+        var dif = -(start - padLeft) +2;
+        padRight += dif;
+        padLeft -= dif;
+      } else if(end + padRight >= linesArray[x].content.length){
+        var dif2 = linesArray[x].content.length - (end+padRight)-2; 
+        padRight += dif2;
+        padLeft -= dif2;
+      }
+      startData = start - padLeft;
+      endData = end + padRight;
+      difference = linesArray[x].content.length - strip(linesArray[x].content).length;
+      linesArray[x].content = linesArray[x].content.substring(0, startData-2) + ' '+ new Array(padLeft+1).join('_') + ((click)? '[<a href="#" onclick=calculate()>' : '[<a href="#" onmouseleave=calculate()>' )+ linkText + "</a>]" + new Array(padRight+1).join('_') +' '+ linesArray[x].content.substring(endData+2, linesArray[x].content.length);
+      writing = true;
+      continue;
+    }
+    if(writing && (typeof linesArray[x].tab == 'undefined' || activeTabs.indexOf(linesArray[x].tab) >= 0)){
+      if(data.length > 0){
+        linesArray[x].content = strip(linesArray[x].content).substring(0, startData-2) + "| " + data.shift()+ " |" +linesArray[x].content.substring(endData+2-difference, linesArray[x].content.length);
+      } else {
+        linesArray[x].content = strip(linesArray[x].content).substring(0, startData-2) + ' ' + new Array(width+3).join("&#175;") +' ' + linesArray[x].content.substring(endData+2-difference, linesArray[x].content.length);
+        writing = false;
+      }
+    }
+  }
+  writeLines();
+}
+
+
+
+
+
+
+
+

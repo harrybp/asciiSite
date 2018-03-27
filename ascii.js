@@ -224,7 +224,7 @@ function init(){
   globalPopovers = {}; 
   website.width = (typeof website.width !== 'undefined')? website.width : 700;
   console.log(document.body.style.fontFamily)
-  document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-size: 16px;font-family:\'Courier New\', Courier, monospace;';
+  document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-size: 16px;font-family:\'Courier New\', Courier, monospace;overflow-x:hidden;';
   website.charWidth = getCharacterWidth();
   website.lineHeight = getLineHeight();
   calculate();

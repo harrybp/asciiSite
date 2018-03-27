@@ -95,7 +95,9 @@ function write(content, padChar, tabname){
 //  Write two paragraphs in columns to the page
 //  Switches to rows when page width < wrapamount
 function columns(text1, text2, tabname, wrapamount, seperate){
-  var wrapAt = (typeof wrapamount != 'undefined')? wrapamount : 50;
+
+  var wrapAt = (typeof wrapamount != 'undefined' && wrapamount != null)? wrapamount : 50;
+  console.log(seperate)
   if(fullwidth < wrapAt){
     write(text1,'|',tabname);
     if(seperate)
@@ -227,13 +229,14 @@ function init(){
 //  Set fullwidth = screen width in characters, pageWidth = content width in characters
 function getWidth(){
   if(window.innerWidth > website.width && window.innerWidth/website.charWidth > 50){
-    fullwidth =  Math.floor(window.innerWidth/website.charWidth);
+    fullwidth =  Math.floor(window.innerWidth/website.charWidth) ;
     pageWidth = Math.floor(website.width/website.charWidth);
     globalLeftPadding = Math.floor((fullwidth-pageWidth)/2);
     globalRightPadding = fullwidth - pageWidth - globalLeftPadding;
   }else {
-    globalLeftPadding = globalRightPadding = 1;
-    pageWidth = fullwidth = Math.floor(window.innerWidth/website.charWidth) ;
+    globalLeftPadding = globalRightPadding =1;
+    pageWidth =  Math.floor(window.innerWidth/website.charWidth) -1;
+    fullwidth =Math.floor(window.innerWidth/website.charWidth) ;
   }
 }
 //-----------------------------------------------------------------------------
@@ -249,12 +252,16 @@ function calculate(){
 //  Changes page to pageName
 function changePage(pageName){
   pageTitle = pageName;
+  window.location.search = '?page=' + pageTitle;
   build();
   writeLines(); 
 }
 //-----------------------------------------------------------------------------
 //  Parse website json and build page
 function build(){
+  var param = window.location.search.substring(window.location.search.indexOf('page=')+5, window.location.search.length);
+  if(param.indexOf('&') != -1) param= param.substring(0, param.indexOf('&'));
+  if(param.length > 0) pageTitle =decodeURIComponent(param);
   pageTitle = (typeof pageTitle != 'undefined')? pageTitle : website.pages[0].title;
   document.title = pageTitle;
 
@@ -306,7 +313,7 @@ function build(){
       else {
         switch(content[y].type){
           case 'columns':
-            columns(content[y].text1, content[y].text2, 'tabs' + pageTitle + tab.tabName.toLowerCase(), null);
+            columns(content[y].text1, content[y].text2, 'tabs' + pageTitle + tab.tabName.toLowerCase(), null, (content[y].seperate!=false));
             break;
         }
       }
@@ -357,7 +364,7 @@ function getCharacterWidth(){ //Get the width of one monospaced character
 }
 //-----------------------------------------------------------------------------
 //  Returns the padding applied to left of all lines
-function getGlobalLeftPadding(){ return new Array(globalLeftPadding).join(' '); }
+function getGlobalLeftPadding(){ return new Array(globalLeftPadding+1).join(' '); }
 //-----------------------------------------------------------------------------
 //  Writes all lines to the page
 function writeLines(){

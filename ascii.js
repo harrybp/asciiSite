@@ -58,7 +58,10 @@ function navbar(brand, links){
     if(links[index].text.length > maxLength) maxLength = links[index].text.length;
   }
   for(var index in links)
-    mobile.push(pad('<a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a>', maxLength, ' '));
+    if(!links[index].active)
+      mobile.push(pad('<a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a>', maxLength, ' '));
+    else 
+      mobile.push(pad(links[index].text, maxLength, ' '));
 
   var startBrand = Math.floor(fullwidth / 10);
   var finished = new Array(startBrand + 1).join(' ') + brand;
@@ -220,7 +223,8 @@ function init(){
   globalPopups = {}; 
   globalPopovers = {}; 
   website.width = (typeof website.width !== 'undefined')? website.width : 700;
-  document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-family:\'Courier New\', Courier, monospace;font-size: 16px;';
+  console.log(document.body.style.fontFamily)
+  document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-size: 16px;font-family:\'Courier New\', Courier, monospace;';
   website.charWidth = getCharacterWidth();
   website.lineHeight = getLineHeight();
   calculate();
@@ -228,15 +232,17 @@ function init(){
 //-----------------------------------------------------------------------------
 //  Set fullwidth = screen width in characters, pageWidth = content width in characters
 function getWidth(){
-  if(window.innerWidth > website.width && window.innerWidth/website.charWidth > 50){
-    fullwidth =  Math.floor(window.innerWidth/website.charWidth) ;
+  var widthToUse = Math.min(document.body.clientWidth, document.body.scrollWidth);
+
+  if(widthToUse > website.width && widthToUse/website.charWidth > 50){
+    fullwidth =  Math.floor(widthToUse/website.charWidth) ;
     pageWidth = Math.floor(website.width/website.charWidth);
     globalLeftPadding = Math.floor((fullwidth-pageWidth)/2);
     globalRightPadding = fullwidth - pageWidth - globalLeftPadding;
   }else {
     globalLeftPadding = globalRightPadding =1;
-    pageWidth =  Math.floor(window.innerWidth/website.charWidth) -1;
-    fullwidth =Math.floor(window.innerWidth/website.charWidth) ;
+    pageWidth =  Math.floor(widthToUse/website.charWidth) -1;
+    fullwidth =Math.floor(widthToUse/website.charWidth);
   }
 }
 //-----------------------------------------------------------------------------
@@ -246,7 +252,7 @@ function calculate(){
   getWidth();
   build();
   addPopups();
-  writeLines()
+  writeLines();
 }
 //-----------------------------------------------------------------------------
 //  Changes page to pageName
@@ -360,6 +366,7 @@ function getCharacterWidth(){ //Get the width of one monospaced character
   document.body.insertBefore(sizingSpan, document.body.firstChild);
   var width = sizingSpan.clientWidth/20;
   sizingSpan.parentNode.removeChild(sizingSpan);
+  console.log(width);
   return width;
 }
 //-----------------------------------------------------------------------------

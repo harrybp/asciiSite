@@ -205,6 +205,9 @@ function blankLine(){ linesArray.push({content: new Array(fullwidth + 1).join(' 
 //    - TAB METHODS 
       window.onload = init;
       window.onresize = calculate;
+      document.addEventListener("DOMContentLoaded", function(event) {
+         init();
+      });
 //
 //-----------------------------------------------------------------------------
 //  PAGE SETUP METHODS
@@ -232,13 +235,15 @@ function init(){
 //-----------------------------------------------------------------------------
 //  Set fullwidth = screen width in characters, pageWidth = content width in characters
 function getWidth(){
+  console.log(document.body.clientWidth+":"+ document.body.scrollWidth)
   var widthToUse = Math.min(document.body.clientWidth, document.body.scrollWidth);
-
+  console.log(widthToUse)
   if(widthToUse > website.width && widthToUse/website.charWidth > 50){
     fullwidth =  Math.floor(widthToUse/website.charWidth) ;
     pageWidth = Math.floor(website.width/website.charWidth);
     globalLeftPadding = Math.floor((fullwidth-pageWidth)/2);
     globalRightPadding = fullwidth - pageWidth - globalLeftPadding;
+    console.log("X"+fullwidth);
   }else {
     globalLeftPadding = globalRightPadding =1;
     pageWidth =  Math.floor(widthToUse/website.charWidth) -1;
@@ -247,7 +252,7 @@ function getWidth(){
 }
 //-----------------------------------------------------------------------------
 // Called to draw the page whenever the size changes
-function calculate(){ 
+function calculate(){
   activeTabs = getActiveTabs();
   getWidth();
   build();

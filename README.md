@@ -1,5 +1,5 @@
 # asciiSite
-A javascript library to create ASCII websites, written just for fun as a challenge. Not sure I will update this as it doesnt really have a pactical use.
+A javascript library to create ASCII websites, written just for fun as a challenge. Not sure I will update this as it doesnt really have a practical use.
 
 For an example go to [here](http://harrybp.github.io).
 

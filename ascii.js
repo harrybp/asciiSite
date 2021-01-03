@@ -716,16 +716,25 @@ function openPopover(key){
     var writing = false;
     var click = false;
     var startData, endData, difference;
+    var otherDifference;
+
+    // Loop over page
     for(var x = 0; x < linesArray.length; x++){
+
+        // Find when the popover toggle link
         var start = linesArray[x].content.indexOf('<a href="#" onmouseenter=openPopover("'+ key + '")');
         if(start == -1 && linesArray[x].content.indexOf('<a href="#" onclick=openPopover("'+ key + '")') != -1){
             start = linesArray[x].content.indexOf('<a href="#" onclick=openPopover("'+ key + '")');
             click = true;
         }
         if(start >= 0){
+
+            // The line of the popover toggle link
             var end = linesArray[x].content.substring(start,linesArray[x].content.length);
             end = end.indexOf('</a>')+4+start;
             var linkText = strip(linesArray[x].content.substring(start,end));
+            var difference = linesArray[x].content.substring(start,end).length - linkText.length;
+            otherDifference = linesArray[x].content.length - strip(linesArray[x].content).length - difference;
             var padLeft = Math.floor((width - linkText.length) / 2);
             var padRight = width - linkText.length - padLeft;
             if(start - padLeft < 0){
@@ -737,14 +746,20 @@ function openPopover(key){
                 padRight += dif2;
                 padLeft -= dif2;
             }
+            start -= otherDifference;
+            end -= otherDifference
             startData = start - padLeft;
+            console.log("Start: " + start + ", padleft: " + padLeft);
             endData = end + padRight;
-            difference = linesArray[x].content.length - strip(linesArray[x].content).length;
-            linesArray[x].content = linesArray[x].content.substring(0, startData-2) + ' '+ new Array(padLeft+1).join('_') + ((click)? '[<a href="#" onclick=calculate()>' : '[<a href="#" onmouseleave=calculate()>' )+ linkText + "</a>]" + new Array(padRight+1).join('_') +' '+ linesArray[x].content.substring(endData+2, linesArray[x].content.length);
+                        console.log(linesArray[x].content + "  " + difference);
+
+            // Rebuild line
+            linesArray[x].content = linesArray[x].content.substring(0, startData-2 + otherDifference) + ' '+ new Array(padLeft+1).join('_') + ((click)? '[<a href="#" onclick=calculate()>' : '[<a href="#" onmouseleave=calculate()>' )+ linkText + "</a>]" + new Array(padRight+1).join('_') +' '+ linesArray[x].content.substring(endData+2 + otherDifference, linesArray[x].content.length);
             writing = true;
             continue;
         }
         if(writing && (typeof linesArray[x].tab == 'undefined' || activeTabs.indexOf(linesArray[x].tab) >= 0)){
+            console.log("a: " + linesArray[x].content);
             if(data.length > 0){
                 linesArray[x].content = strip(linesArray[x].content).substring(0, startData-2) + "| " + data.shift()+ " |" +linesArray[x].content.substring(endData+2-difference, linesArray[x].content.length);
             } else {
@@ -754,6 +769,7 @@ function openPopover(key){
         }
     }
     writeLines();
+    applyDarkMode();
 }
 
 

@@ -31,12 +31,12 @@ function popover(key, content, width){ globalPopovers[key] = { content: content,
 //  Adds a popup of width = size located 1/position of the way down the page
 //  Open with openpopup(key)
 function popup(key, content, size, position, funcOpen, funcClose){
-  if(size > fullwidth) size = fullwidth;
-  var pos = (position)? position : 2;
-  if(typeof globalPopups[key] == 'undefined') globalPopups[key] = { key: key, size: size, position: pos, active: false, content: content };
-  globalPopups[key].size = size;
-  if(funcOpen) globalPopups[key].function = funcOpen;
-  if(funcOpen) globalPopups[key].functionClose = funcClose;
+    if(size > fullwidth) size = fullwidth;
+    var pos = (position)? position : 2;
+    if(typeof globalPopups[key] == 'undefined') globalPopups[key] = { key: key, size: size, position: pos, active: false, content: content };
+    globalPopups[key].size = size;
+    if(funcOpen) globalPopups[key].function = funcOpen;
+    if(funcOpen) globalPopups[key].functionClose = funcClose;
 
 }
 
@@ -47,51 +47,75 @@ function popup(key, content, size, position, funcOpen, funcClose){
 //      link:     (String - The link url),
 //      selected: (Boolean - True if link is for current page)
 //    }
-function navbar(brand, links){
-  blankLine();
-  globalNav = {brand: brand, links: links};
-  var linkLength= 2;
-  var maxLength = 0;
-  var mobile = [];
-  for(var index in links){
-    linkLength += links[index].text.length;
-    if(links[index].text.length > maxLength) maxLength = links[index].text.length;
-  }
-  for(var index in links)
-    if(!links[index].active)
-      mobile.push(pad('<a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a>', maxLength, ' '));
-    else
-      mobile.push(pad(links[index].text, maxLength, ' '));
-
-  var startBrand = Math.floor(fullwidth / 10);
-  var finished = new Array(startBrand + 1).join(' ') + brand;
-  if(linkLength + brand.length + 4*startBrand < fullwidth) {
-    finished += new Array(Math.floor(fullwidth-linkLength-brand.length-((links.length+1)*startBrand))).join(' ');
-    for(var index in links){
-      finished += (links[index].active)? '['+links[index].text+']' : '<a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a>';
-      finished += new Array(startBrand + 1).join(' ')
+function navbar(brand, links, centered){
+    if(darkMode){
+        brand = brand.replace(/\^/gi, 'o');
     }
-  } else {
-    finished += new Array(fullwidth - 2 - (2*startBrand) - brand.length).join(' ');
-    finished += '[<a href="#" onclick=openPopover("nav")>X</a>]';
-  }
-  popover('nav', mobile, maxLength);
-  linesArray.push({content: finished});
-  drawLine('_', true);
+    blankLine();
+    globalNav = {brand: brand, links: links};
+    var linkLength= 4;
+    var maxLength = 0;
+    var mobile = [];
+
+    // Get length of the links
+    for(var index in links){
+        linkLength += links[index].text.length;
+        if(links[index].text.length > maxLength) maxLength = links[index].text.length;
+    }
+
+    // Mobile links
+    for(var index in links){
+        if(!links[index].active)
+            mobile.push(pad('<a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a>', maxLength, ' '));
+        else
+            mobile.push(pad(links[index].text, maxLength, ' '));
+    }
+
+    var startBrand = centered? getGlobalLeftPadding().length + 2 : Math.floor(fullwidth / 10);
+    var finished = new Array(startBrand + 1).join(' ') + brand;
+
+    // Spacing between brand and first link
+    var initialSpacing = centered? Math.floor((fullwidth - (startBrand * 2) - linkLength)/1.75) :
+                                  Math.floor(fullwidth-linkLength-strip(brand).length-((links.length+1)*startBrand));
+
+    // Spacing between links
+    var spacing = centered? Math.floor((fullwidth - linkLength - strip(brand).length - (2 * startBrand) - initialSpacing)/(links.length - 1)) :
+                            startBrand + 1;
+
+    // Cutoff
+    var cutoff = centered? linkLength + strip(brand).length + 2*startBrand + initialSpacing + links.length : linkLength + strip(brand).length + 4*startBrand;
+
+    // Desktop
+    if(cutoff < fullwidth) {
+
+        console.log("spacing: " + initialSpacing + ", " + spacing);
+        finished += new Array(initialSpacing).join(' ');
+        for(var index in links){
+            finished += (links[index].active)? '['+links[index].text+']' : ' <a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a> ';
+            if(index != links.length - 1)
+                finished += new Array(spacing).join(' ');//new Array(startBrand + 1).join(' ')
+        }
+    } else {
+        finished += new Array(fullwidth - 2 - (2*startBrand) - strip(brand).length).join(' ');
+        finished += '[<a href="#" onclick=openPopover("nav")>X</a>]';
+    }
+    popover('nav', mobile, maxLength);
+    linesArray.push({content: finished});
+    drawLine('_', true);
 }
 
 //-----------------------------------------------------------------------------
 //  Adds a paragraph to the page
 function write(content, padChar, tabname){
-  var padding = (padChar)? padChar : '|'
-  var lines = wrap(content, pageWidth-5);
-  for(var x = 0; x < lines.length; x++){
-    var finished = getGlobalLeftPadding() + padding + ' ' + lines[x] + ' ' + padding;
-    if(tabname)
-      linesArray.push({content: finished, tab: tabname});
-    else
-      linesArray.push({content: finished});
-  }
+    var padding = (padChar)? padChar : '|'
+        var lines = wrap(content, pageWidth-5);
+    for(var x = 0; x < lines.length; x++){
+        var finished = getGlobalLeftPadding() + padding + ' ' + lines[x] + ' ' + padding;
+        if(tabname)
+            linesArray.push({content: finished, tab: tabname});
+        else
+            linesArray.push({content: finished});
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -99,29 +123,29 @@ function write(content, padChar, tabname){
 //  Switches to rows when page width < wrapamount
 function columns(text1, text2, tabname, wrapamount, seperate){
 
-  var wrapAt = (typeof wrapamount != 'undefined' && wrapamount != null)? wrapamount : 50;
-  console.log(seperate)
-  if(fullwidth < wrapAt){
-    write(text1,'|',tabname);
-    if(seperate)
-      write(' ','|',tabname);
-    write(text2,'|',tabname);
-    return;
-  }
-  var availableWidth = pageWidth - 8;
-  var width1 = Math.floor(availableWidth/2);
-  var width2 = availableWidth - width1;
-  var lines1 = wrap(text1, width1, true);
-  var lines2 = wrap(text2, width2);
-  var total = '';
-  while(lines1.length > 0 || lines2.length > 0){
-    if(lines1.length == 0) var line1 = pad(' ', width1, ' ');
-    else var line1 = lines1.shift();
-    if(lines2.length == 0) var line2 = pad(' ', width2, ' ');
-    else var line2 = lines2.shift();
-    var finished = getGlobalLeftPadding() + "| " + line1 + ' | ' + line2 + ' |';
-    linesArray.push({content: finished, tab: tabname});
-  }
+    var wrapAt = (typeof wrapamount != 'undefined' && wrapamount != null)? wrapamount : 50;
+    console.log(seperate)
+        if(fullwidth < wrapAt){
+            write(text1,'|',tabname);
+            if(seperate)
+                write(' ','|',tabname);
+            write(text2,'|',tabname);
+            return;
+        }
+    var availableWidth = pageWidth - 8;
+    var width1 = Math.floor(availableWidth/2);
+    var width2 = availableWidth - width1;
+    var lines1 = wrap(text1, width1, true);
+    var lines2 = wrap(text2, width2);
+    var total = '';
+    while(lines1.length > 0 || lines2.length > 0){
+        if(lines1.length == 0) var line1 = pad(' ', width1, ' ');
+        else var line1 = lines1.shift();
+        if(lines2.length == 0) var line2 = pad(' ', width2, ' ');
+        else var line2 = lines2.shift();
+        var finished = getGlobalLeftPadding() + "| " + line1 + ' | ' + line2 + ' |';
+        linesArray.push({content: finished, tab: tabname});
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -208,6 +232,35 @@ window.onresize = calculate;
 document.addEventListener("DOMContentLoaded", function(event) {
         init();
         });
+
+// ----------------------------------------------------------------------------
+// Dark Mode
+var darkMode = false;
+function toggleDarkMode(){
+    darkMode = !darkMode;
+    window.location.search = window.location.search.replace('darkmode='+ !darkMode, 'darkmode=' + darkMode);
+    calculate();
+}
+
+function applyDarkMode(){
+    var bgColour = '#e3e3e3';
+    var textColour = 'black';
+    var linkColour = 'blue';
+    if(darkMode){
+        bgColour = '#171717';
+        textColour = '#a6a6a6';
+        linkColour = '#9c0000';
+    }
+    document.body.style.backgroundColor = bgColour;
+    document.body.style.color = textColour;
+    var links = document.getElementsByTagName("a");
+    for(var i=0; i<links.length; i++){
+        if(links[i].href){
+            links[i].style.color = linkColour;
+        }
+    }
+}
+
 //
 //-----------------------------------------------------------------------------
 //  PAGE SETUP METHODS
@@ -227,7 +280,7 @@ function init(){
     globalPopovers = {};
     website.width = (typeof website.width !== 'undefined')? website.width : 700;
     console.log(document.body.style.fontFamily)
-    document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-size: 16px;font-family:\'Courier New\', Courier, monospace;overflow-x:hidden;';
+        document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-size: 16px;font-family:\'Courier New\', Courier, monospace;overflow-x:hidden;';
     website.charWidth = getCharacterWidth();
     website.lineHeight = getLineHeight();
     calculate();
@@ -258,23 +311,55 @@ function calculate(){
     build();
     addPopups();
     writeLines();
+    applyDarkMode();
 }
 //-----------------------------------------------------------------------------
 //  Changes page to pageName
 function changePage(pageName){
     pageTitle = pageName;
-    window.location.search = '?page=' + pageTitle;
+    window.location.search = '?page=' + pageTitle + '&darkmode=' + darkMode;
     build();
     writeLines();
 }
 //-----------------------------------------------------------------------------
 //  Parse website json and build page
 function build(){
-    var param = window.location.search.substring(window.location.search.indexOf('page=')+5, window.location.search.length);
-    if(param.indexOf('&') != -1) param= param.substring(0, param.indexOf('&'));
-    if(param.length > 0) pageTitle =decodeURIComponent(param);
+
+    // Extract page title and darkmode
+    var pageTitle;
+    if(window.location.search.indexOf('page=') > 0){
+        var param = window.location.search.substring(window.location.search.indexOf('page=')+5, window.location.search.length);
+        if(param.indexOf('&') != -1) param= param.substring(0, param.indexOf('&'));
+        if(param.length > 0) pageTitle =decodeURIComponent(param);
+    }
+    else {
+        if(window.location.search.indexOf('?') > -1){
+            window.location.search += '&page=' + website.pages[0].title;
+        } else{
+            window.location.search = '?page=' + website.pages[0].title;
+        }
+    }
     pageTitle = (typeof pageTitle != 'undefined')? pageTitle : website.pages[0].title;
     document.title = pageTitle;
+
+    var darkmode;
+    if(window.location.search.indexOf('darkmode=') > 0){
+        console.log(window.location.search);
+        var param = window.location.search.substring(window.location.search.indexOf('darkmode=')+9, window.location.search.length);
+        if(param.indexOf('&') != -1) param= param.substring(0, param.indexOf('&'));
+        if(param.length > 0) darkmode =decodeURIComponent(param);
+    }
+    else {
+        if(window.location.search.indexOf('?') > -1){
+            window.location.search += '&darkmode=false';
+        } else{
+            window.location.search += '?darkmode=false';
+        }
+    }
+    pageTitle = (typeof pageTitle != 'undefined')? pageTitle : website.pages[0].title;
+    darkMode = (typeof darkmode != 'undefined')? (darkmode.substring(0,4) == 'true') : false;
+    console.log('DM ' + darkmode)
+    applyDarkMode();
 
     //Navbar
     linesArray = [];
@@ -288,7 +373,8 @@ function build(){
         links.push({text: title, link: link, active: (title == pageTitle)});
     }
     var brand = website.name;
-    navbar(brand, links);
+    var centered = true;
+    navbar(brand, links, centered);
 
     //Page title
     blankLine();
@@ -467,7 +553,6 @@ function splitText(content){
 
         // Link beginning
         if(word.indexOf('<a') != -1){
-            console.log("ok");
             if(word.length > 2){
                 words.push({text: strip(word.substring(0,word.indexOf('<a'))), link: link});
                 word = word.substring(word.indexOf('<a'), word.length);

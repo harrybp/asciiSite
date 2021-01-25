@@ -22,19 +22,20 @@ class Navbar {
 
     // ------------------------------------------------------------------------
     // Render the navbar to a string
-    render(width: number, left_padding: number, selected_page: number): string {
+    render(width: number, left_padding: number, selected_page: number): Array<string> {
         this.update_dimensions(width, left_padding);
 
-        // Build the string
-        let html_string: string = Array(width+1).join(" ") + "\n"; // Blank line
-        html_string += (this.mobile_cutoff < width)? this.render_desktop_line(selected_page) : this.render_mobile_line();
-        html_string += "\n" + Array(width+1).join("_") + "\n";
-        return html_string;
+        // Build the html lines
+        let html: Array<string> = [];
+        html.push(Array(width+1).join(" ")); // Blank line
+        html = html.concat((this.mobile_cutoff < width)? this.render_desktop_line(selected_page) : this.render_mobile_line());
+        html.push(Array(width+1).join("_"));
+        return html;
     }
 
     // ------------------------------------------------------------------------
     // Render the navbar line for desktop
-    render_desktop_line(selected_page: number): string {
+    render_desktop_line(selected_page: number): Array<string> {
 
         // Brand spacing ~ Brand ~ Initial spacing ~ link0 ~ spacing ~ link1
         let html_string: string = Array(this.start_brand_index).join(" ");
@@ -50,17 +51,17 @@ class Navbar {
                 html_string += Array(this.spacing).join(" ");
             }
         }
-        return html_string;
+        return [html_string];
     }
 
     // ------------------------------------------------------------------------
     // Render the navbar line for mobile
-    render_mobile_line(): string {
+    render_mobile_line(): Array<string> {
         let html_string: string = Array(this.start_brand_index).join(" ");
         html_string += this.brand;
         html_string += Array(this.mobile_spacing).join(" ");
         html_string += '[<a href="#" onclick=openPopover("nav")>X</a>]';
-        return html_string;
+        return [html_string];
     }
 
     // ------------------------------------------------------------------------

@@ -15,39 +15,40 @@ class Page {
 
     // ------------------------------------------------------------------------
     // Render the contents of a page to a html string
-    render(page_width: number, content_width: number, left_padding: number, right_padding: number): string {
-        let html_string: string = Array(page_width + 1).join(" ") + "\n";
-        html_string += this.render_title(page_width, left_padding);
-        html_string += this.render_tab_selector(page_width, left_padding, content_width);
-        html_string += this.tabs[this.selected_tab].render(content_width, left_padding, right_padding);
-        html_string += this.render_bottom(left_padding, content_width, right_padding);
-        return html_string;
+    render(page_width: number, content_width: number, left_padding: number, right_padding: number): Array<string> {
+        let html: Array<string> = [];
+        html.push(Array(page_width + 1).join(" "));
+        html = html.concat(this.render_title(page_width, left_padding));
+        html = html.concat(this.render_tab_selector(page_width, left_padding, content_width));
+        html = html.concat(this.tabs[this.selected_tab].render(content_width, left_padding, right_padding));
+        html = html.concat(this.render_bottom(left_padding, content_width, right_padding));
+        return html;
     }
 
     // ------------------------------------------------------------------------
     // The bottom of the tab is a single closing line
-    render_bottom(left_padding: number, content_width: number, right_padding: number): string {
+    render_bottom(left_padding: number, content_width: number, right_padding: number): Array<string> {
         let html_string: string = Array(left_padding + 1).join(" ") + "|";
         html_string += Array(content_width - 1).join(" ") + "|";
         html_string += Array(right_padding + 1).join(" ") + "\n";
         html_string += Array(left_padding + 1).join(" ") + " ";
         html_string += Array(content_width - 1).join("&#175;") + " ";
         html_string += Array(right_padding + 1).join(" ");
-        return html_string;
+        return [html_string];
     }
 
     // ------------------------------------------------------------------------
     // The title shows at the top of the page
-    render_title(width: number, left_padding: number): string{
+    render_title(width: number, left_padding: number): Array<string>{
         let html_string: string = Array(left_padding + 2).join(" ");
         html_string += this.title;
-        html_string += Array(width - left_padding - this.title.length).join(" ") + "\n";
-        return html_string;
+        html_string += Array(width - left_padding - this.title.length).join(" ");
+        return [html_string];
     }
 
     // ------------------------------------------------------------------------
     // The tab selector provides navigation between the tabs
-    render_tab_selector(width: number, left_padding: number, content_width: number) {
+    render_tab_selector(width: number, left_padding: number, content_width: number): Array<string>{
         // Line 1 is the tops of the tab selectors
         // Line 2 is the tab names and links
         // Line 3 is the top of the main tab content
@@ -69,10 +70,10 @@ class Page {
             }
             index++;
         }
-        line_1 += Array(width - line_1.length + 1).join(" ") + "\n";
-        line_2 += Array(width - line_2_length).join(" ") + "\n";
+        line_1 += Array(width - line_1.length + 1).join(" ");
+        line_2 += Array(width - line_2_length).join(" ");
         line_3 += Array(content_width + left_padding - line_3.length).join("@") + "|";
-        line_3 += Array(width - line_3.length + 1).join(" ") + "\n";
+        line_3 += Array(width - line_3.length + 1).join(" ");
 
         // Done at the end to allow for length calculations
         line_3 = line_3.replace(/@/g, "&#175;");
@@ -82,6 +83,6 @@ class Page {
             line_2 = "";
         }
 
-        return line_1 + line_2 + line_3;
+        return [line_1, line_2, line_3];
     }
 }

@@ -21,9 +21,9 @@ class Website {
     // Render the website to the DOM
     render(): string {
         this.update_dimensions();
-        let new_html: string = this.navbar.render(this.page_width, this.left_padding, this.selected_page);
-        new_html += this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding)
-        return new_html;
+        let new_html: Array<string> = this.navbar.render(this.page_width, this.left_padding, this.selected_page);
+        new_html = new_html.concat(this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding))
+        return new_html.join("\n");
     }
 
     // ------------------------------------------------------------------------

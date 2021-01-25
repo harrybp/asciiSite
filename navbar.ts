@@ -44,7 +44,7 @@ class Navbar {
             if(i == selected_page){
                 html_string += "[" + this.page_names[i] + "]";
             } else {
-                html_string += " <a href='" + this.page_links + "'>" + this.page_names[i] + "</a> ";
+                html_string += " <a href='#' onclick='switch_page(" + i + ")'>" + this.page_names[i] + "</a> ";
             }
             if(i != (this.page_names.length - 1)){
                 html_string += Array(this.spacing).join(" ");

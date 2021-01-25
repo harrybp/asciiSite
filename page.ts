@@ -56,16 +56,18 @@ class Page {
         let line_2_length: number = line_2.length;
         let line_3: string = Array(left_padding + 1).join(" ") + "|@";
 
-        for(const tab of tabs){
+        let index: number = 0;
+        for(const tab of this.tabs){
             line_1 += Array(tab.title.length + 3).join("_") + " ";
             line_2_length += tab.title.length;
-            if(tab.title == "Games"){
+            if(index == this.selected_tab){
                 line_2 += " " + tab.title + " |";
                 line_3 += Array(tab.title.length + 4).join(" ");
             } else {
-                line_2 += " <a href='#'>" + tab.title + "</a> |";
+                line_2 += " <a href='#' onclick='switch_tab(" + index +")'>" + tab.title + "</a> |";
                 line_3 += Array(tab.title.length + 4).join("@");
             }
+            index++;
         }
         line_1 += Array(width - line_1.length + 1).join(" ") + "\n";
         line_2 += Array(width - line_2_length).join(" ") + "\n";
@@ -76,7 +78,7 @@ class Page {
         line_3 = line_3.replace(/@/g, "&#175;");
 
         // If there are no tabs to select, skip the middle line
-        if(tabs.length == 0){
+        if(this.tabs.length == 0){
             line_2 = "";
         }
 

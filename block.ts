@@ -24,17 +24,28 @@ class Block {
         for(const word of this.contents){
 
             // If this word fits on the current line
-            if(word.text.length + current_line_length < width){
+            if(!word.new_line && (word.text.length + current_line_length < width)){
                 current_line.push(word);
                 current_line_length += word.text.length + 1;
 
             // Else start a new line
             } else {
                 lines.push(current_line);
-                line_lengths.push(current_line_length - 1);
+
+                // Empty lines are a unique case
+                if(current_line_length > 0){
+                    line_lengths.push(current_line_length - 1);
+                } else {
+                    line_lengths.push(current_line_length);
+                }
+
                 current_line = [];
-                current_line.push(word);
-                current_line_length = word.text.length + 1;
+                if(word.new_line){
+                    current_line_length = 0;
+                } else {
+                    current_line.push(word);
+                    current_line_length = word.text.length + 1;
+                }
             }
         }
 

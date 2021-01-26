@@ -1,12 +1,12 @@
 // ----------------------------------------------------------------------------
 // Website is constructed here
 
-let games_string: string = "Various Games made by <br>me over the last few years in my spare time. All were made completely from scratch either in pure HTML5 with javascript and the canvas or in C++ and compiled to web assembly. All should run in the browser. Only a couple of them work with mobile devices.<br><br><b>Cave Escape (2019 - Present)</b><br> Avoid the monsters and try to escape the vast cave system. Collect as many coins as possible. Created in C++ and compiled to web-assembly using emscripten. Still a work in progress.<br> <a href='games/cave_escape.html'>Click</a> to play<br><br><b>Ocean Simulator (2018)</b><br> Play with fishes and fish-eating worms in this fun little sandbox. This is an implementation of boids written in javascript.<br> <a href='games/ocean_simulator.html'>Click</a> to play<br><br><b>Bounce (2018)</b><br> Sort of like 2D single-player pong? Keep the ball from escaping! Created in javascript - works on mobile.<br> <a href='games/bounce.html'>Click</a> to play<br><br><b>Zombie Run (2017)</b><br> A side scrolling run-and-shoot type game with randomly generated caves. See how far you can get! Created in javascript - works on mobile.<br> <a href='games/zombie_run.html'>Click</a> to play<br><br><b>Meteor Shower (2017)</b><br> Dodge falling blocks and collect health cubes as you try to survive for as long as possible. Created in javascript.<br> <a href='games/meteor_shower.html'>Click</a> to play<br><br><b>Endless Climb (2017)</b><br> Race against time as you jump upwards from block to block in this fun little concept game. Created in javascript.<br> <a href='games/endless_climb.html'>Click</a> to play<br><br>Check my <a href='https://github.com/harrybp'>github</a> for more stuff";
+let games_string: string = "Various Games made by me over the last few years in my spare time. All were made completely from scratch either in pure HTML5 with javascript and the canvas or in C++ and compiled to web assembly. All should run in the browser. Only a couple of them work with mobile devices.<br><br><b>Cave Escape (2019 - Present)</b><br> Avoid the monsters and try to escape the vast cave system. Collect as many coins as possible. Created in C++ and compiled to web-assembly using emscripten. Still a work in progress.<br> <a href='games/cave_escape.html'>Click</a> to play<br><br><b>Ocean Simulator (2018)</b><br> Play with fishes and fish-eating worms in this fun little sandbox. This is an implementation of boids written in javascript.<br> <a href='games/ocean_simulator.html'>Click</a> to play<br><br><b>Bounce (2018)</b><br> Sort of like 2D single-player pong? Keep the ball from escaping! Created in javascript - works on mobile.<br> <a href='games/bounce.html'>Click</a> to play<br><br><b>Zombie Run (2017)</b><br> A side scrolling run-and-shoot type game with randomly generated caves. See how far you can get! Created in javascript - works on mobile.<br> <a href='games/zombie_run.html'>Click</a> to play<br><br><b>Meteor Shower (2017)</b><br> Dodge falling blocks and collect health cubes as you try to survive for as long as possible. Created in javascript.<br> <a href='games/meteor_shower.html'>Click</a> to play<br><br><b>Endless Climb (2017)</b><br> Race against time as you jump upwards from block to block in this fun little concept game. Created in javascript.<br> <a href='games/endless_climb.html'>Click</a> to play<br><br>Check my <a href='https://github.com/harrybp'>github</a> for more stuff";
 
 let other_string: string = "<b>Texture Generation using ML (2018)</b><br> Created as part of my final year project at uni, a demonstration of a few methods of synthesising unique textures using machine learning methods. <br> See the <a href='https://harrybp.github.io/texture_generation_demo/'>demo</a> or check it out on <a href='https://github.com/harrybp/TextureGeneration'>github</a><br><br><b>This website (2017 - Present)</b><br> A text-only interactive website built using javascript with support for a navbar, tabs, pop-ups, pop-overs and columns of text. Hint: try clicking the cat face in the nav bar! <br> Check it out on <a href='https://github.com/harrybp/asciiSite'>github</a>";
 
 let info_string: string = "Hi I'm Harry!<br><br>This website serves as an archive for all of the web projects I have worked on over the years. The stuff on here is all for fun - I have been trying to learn game development so a lot of the projects are little games. Feel free to check them out and contact me with any feedback.";
-let contact_string: string = "";
+let contact_string: string = "You can email me at <a href='mailto:harrybp@me.com'>harrybp@me.com</a> or checkout my github at <a href='https://github.com/harrybp'>github.com/harrybp</a>";
 
 
 // First create a tab with a block of content
@@ -27,7 +27,12 @@ let page1: Page = new Page("About Me", "about.html", page1_tabs);
 // Then create a navbar
 let page_names: Array<string> = ["Projects", "About Me"];
 let links: Array<string> = ["projects.html", "about.html"];
-let nav: Navbar = new Navbar("harrycats", page_names, links);
+let navbar_title_string: string = "<a onclick='toggle_dark_mode()'>^-^</a> harrycats";
+let navbar_title: Block = new Block(tokenize(navbar_title_string));
+let navbar_dark_title_string: string = "<a onclick='toggle_dark_mode()'>o-o</a> harrycats";
+let navbar_dark_title: Block = new Block(tokenize(navbar_dark_title_string));
+
+let nav: Navbar = new Navbar(navbar_title, page_names, links, navbar_dark_title);
 
 let pages: Array<Page> = [page0, page1];
 
@@ -48,6 +53,22 @@ let popovers: Array<Popover> = [popover_0, popover_1];
 function reload(): void {
     let new_html: string = site.render(popovers);
     document.body.innerHTML = new_html;
+    reload_style();
+}
+
+// -----------------------------------------------------------------------------
+// Update the page colour-scheme
+function reload_style(): void {
+    let page_style: Page_Style = site.get_page_style();
+    document.body.style.backgroundColor = page_style.background_colour;
+    document.body.style.color = page_style.text_colour;
+
+    let page_links: any = document.getElementsByTagName("a");
+    for(var i = 0; i < page_links.length; i++){
+        if(page_links[i].href){
+            page_links[i].style.color = page_style.link_colour;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -92,6 +113,12 @@ function close_popover(id_number: number): void {
     reload();
 }
 
+// ----------------------------------------------------------------------------
+// Toggle Dark Mode
+function toggle_dark_mode(): void{
+    site.dark_mode = !site.dark_mode;
+    reload();
+}
 
 window.onresize = reload;
 window.onload = reload;

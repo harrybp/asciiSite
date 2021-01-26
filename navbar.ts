@@ -3,7 +3,8 @@
 class Navbar {
     page_names: Array<string>; // To be pages?
     page_links: Array<string>;
-    brand: string;
+    brand: Block;
+    dark_brand: Block;
     centered: boolean;
 
     // Dimensions (given in characters)
@@ -13,8 +14,9 @@ class Navbar {
     mobile_spacing: number; // Spacing between brand and hamburger
     mobile_cutoff: number;
 
-    constructor(brand: string, page_names: Array<string>, page_links: Array<string>){
+    constructor(brand: Block, page_names: Array<string>, page_links: Array<string>, dark_brand: Block = brand){
         this.brand = brand;
+        this.dark_brand = dark_brand;
         this.page_names = page_names;
         this.page_links = page_links;
         this.centered = true;
@@ -22,8 +24,8 @@ class Navbar {
 
     // ------------------------------------------------------------------------
     // Render the navbar to a string
-    render(width: number, left_padding: number, selected_page: number): Array<Array<Token>> {
-        this.update_dimensions(width, left_padding);
+    render(width: number, left_padding: number, selected_page: number, dark_mode: boolean): Array<Array<Token>> {
+        this.update_dimensions(width, left_padding, dark_mode);
         let rendered: Array<Array<Token>> = [];
 
         // Blank line
@@ -33,9 +35,9 @@ class Navbar {
 
         // Nav line
         if(width < this.mobile_cutoff){
-            rendered.push(this.render_mobile_line(selected_page));
+            rendered.push(this.render_mobile_line(selected_page, dark_mode));
         } else {
-            rendered.push(this.render_desktop_line(selected_page));
+            rendered.push(this.render_desktop_line(selected_page, dark_mode));
         }
 
         // Line
@@ -48,12 +50,13 @@ class Navbar {
 
     // ------------------------------------------------------------------------
     // Render the navbar line for desktop
-    render_desktop_line(selected_page: number): Array<Token> {
+    render_desktop_line(selected_page: number, dark_mode: boolean): Array<Token> {
+        let brand: Array<Token> = (dark_mode)? this.dark_brand.render(-1)[0] : this.brand.render(-1)[0];
 
         // Brand spacing ~ Brand ~ Initial spacing ~ link0 ~ spacing ~ link1
         let rendered_line: Array<Token> = [];
         rendered_line.push(new Space(this.start_brand_index - 1));
-        rendered_line.push(new Word(this.brand));
+        rendered_line = rendered_line.concat(brand);
         rendered_line.push(new Space(this.initial_spacing - 1));
         for(var i = 0; i < this.page_names.length; i++){
             if(i == selected_page){
@@ -74,10 +77,11 @@ class Navbar {
 
     // ------------------------------------------------------------------------
     // Render the navbar line for mobile
-    render_mobile_line(selected_page: number): Array<Token> {
+    render_mobile_line(selected_page: number, dark_mode: boolean): Array<Token> {
+        let brand: Array<Token> = (dark_mode)? this.dark_brand.render(-1)[0] : this.brand.render(-1)[0];
         let rendered_line: Array<Token> = [];
         rendered_line.push(new Space(this.start_brand_index - 1));
-        rendered_line.push(new Word(this.brand));
+        rendered_line = rendered_line.concat(brand);
         rendered_line.push(new Space(this.mobile_spacing - 1));
         rendered_line.push(new Word("["));
         rendered_line.push(new Word("X", false, false, true, "#", "open_popover(" + selected_page + ")"));
@@ -87,22 +91,24 @@ class Navbar {
 
     // ------------------------------------------------------------------------
     // Update the dimensions
-    update_dimensions(page_width: number, left_padding: number): void {
+    update_dimensions(page_width: number, left_padding: number, dark_mode: boolean): void {
         let link_length: number = this.page_names.reduce((x,y) => x + y).length + 4;
+        let brand: Array<Token> = (dark_mode)? this.dark_brand.render(-1)[0] : this.brand.render(-1)[0];
+        let brand_length: number = get_token_array_length(brand);
 
         // Calculate the spacing between the navbar elements
         if(this.centered){
-            this.start_brand_index = left_padding + 2;
+            this.start_brand_index = left_padding + 3;
             let side_padding: number = this.start_brand_index * 2;
             this.initial_spacing = Math.floor((page_width - side_padding - link_length) * 0.6);
-            this.spacing = Math.floor((page_width - side_padding - link_length - this.brand.length - this.initial_spacing) / (this.page_names.length - 1));
-            this.mobile_cutoff = link_length + this.brand.length + (2 * this.start_brand_index) + this.initial_spacing + this.page_names.length;
+            this.spacing = Math.floor((page_width - side_padding - link_length - brand_length - this.initial_spacing) / (this.page_names.length - 1));
+            this.mobile_cutoff = link_length + brand_length + (2 * this.start_brand_index) + this.initial_spacing + this.page_names.length;
         } else {
-            this.start_brand_index = Math.floor(page_width / 10);
-            this.initial_spacing = page_width - link_length - this.brand.length - ((links.length + 1) * this.start_brand_index);
+            this.start_brand_index = Math.floor(page_width / 10) + 1;
+            this.initial_spacing = page_width - link_length - brand_length - ((links.length + 1) * this.start_brand_index);
             this.spacing = this.start_brand_index + 1;
-            this.mobile_cutoff = link_length + this.brand.length + (4 * this.start_brand_index);
+            this.mobile_cutoff = link_length + brand_length + (4 * this.start_brand_index);
         }
-        this.mobile_spacing = page_width - 2 - (2 * this.start_brand_index) - this.brand.length;
+        this.mobile_spacing = page_width - 2 - (2 * this.start_brand_index) - brand_length;
     }
 }

@@ -53,9 +53,9 @@ class Page {
     // The title shows at the top of the page
     render_title(width: number, left_padding: number): Array<Token>{
         let rendered_line: Array<Token> = [];
-        rendered_line.push(new Space(left_padding + 1));
+        rendered_line.push(new Space(left_padding + 2));
         rendered_line.push(new Word(this.title));
-        rendered_line.push(new Space(width - left_padding - this.title.length - 1));
+        rendered_line.push(new Space(width - left_padding - this.title.length));
         return rendered_line;
     }
 

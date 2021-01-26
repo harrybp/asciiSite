@@ -1,3 +1,9 @@
+interface Page_Style {
+    background_colour: string;
+    text_colour: string;
+    link_colour: string;
+}
+
 class Website {
     navbar: Navbar;
     target_content_pixel_width: number;
@@ -10,18 +16,33 @@ class Website {
     right_padding: number;
     content_width: number;
 
+    dark_mode: boolean;
+    light_style: Page_Style;
+    dark_style: Page_Style;
+
     constructor(content_width: number, navbar: Navbar, pages: Array<Page>){
         this.navbar = navbar;
         this.target_content_pixel_width = content_width;
         this.selected_page = 0;
         this.pages = pages;
+
+        this.dark_mode = false;
+        this.light_style = { background_colour: "#e3e3e3", text_colour: "black", link_colour: "blue" };
+        this.dark_style = { background_colour: "#171717", text_colour: "#a6a6a6", link_colour: "#9c0000" };
+
+    }
+
+    // ------------------------------------------------------------------------
+    // Return the colour-scheme
+    get_page_style() {
+        return this.dark_mode? this.dark_style : this.light_style;
     }
 
     // ------------------------------------------------------------------------
     // Render the website to the DOM
     render(popovers: Array<Popover>): string {
         this.update_dimensions();
-        let rendered: Array<Array<Token>> = this.navbar.render(this.page_width, this.left_padding, this.selected_page);
+        let rendered: Array<Array<Token>> = this.navbar.render(this.page_width, this.left_padding, this.selected_page, this.dark_mode);
         rendered = rendered.concat(this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding));
 
         for(const popover of popovers){

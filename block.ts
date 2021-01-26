@@ -17,6 +17,8 @@ class Block {
 
     // Wrap the words to  a set length
     wrap(width: number): Block_Data {
+        // Providing a width of zero will do no wrapping
+
         let lines: Array<Array<Word>> = [];
         let line_lengths: Array<number> = [];
         let current_line: Array<Word> = [];
@@ -24,7 +26,7 @@ class Block {
         for(const word of this.contents){
 
             // If this word fits on the current line
-            if(!word.new_line && (word.text.length + current_line_length < width)){
+            if((width < 0) || (!word.new_line && (word.text.length + current_line_length < width))){
                 current_line.push(word);
                 current_line_length += word.text.length + 1;
 
@@ -88,7 +90,9 @@ class Block {
             }
 
             // Make the line the correct length
-            current_line.push(new Space(width - data.lengths[i] - 1));
+            if(width > 0){
+                current_line.push(new Space(width - data.lengths[i] - 1));
+            }
             rendered_lines.push(current_line);
         }
 

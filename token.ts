@@ -53,7 +53,14 @@ class Word implements Token {
         if(this.linked){
             let new_value: string = "";
             if(!this.no_link_begin){
-                new_value +=  "<a href='" + this.link_href + "' onclick='" + this.link_onclick + "'>";
+                new_value +=  "<a "
+                if(this.link_href.length > 0){
+                    new_value += "href='" + this.link_href + "' ";
+                }
+                if(this.link_onclick.length > 0){
+                    new_value += "onclick='" + this.link_onclick + "' ";
+                }
+                new_value += ">";
             }
             new_value += value;
             if(!this.no_link_end){

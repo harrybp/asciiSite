@@ -16,6 +16,10 @@ class Word implements Token {
     link_onclick: string;
     new_line: boolean;
 
+    // For a multi-word link we can ommit tags between every word
+    no_link_end: boolean;
+    no_link_begin: boolean;
+
     constructor(text: string, bold: boolean = false, italic: boolean = false,
                 linked: boolean = false, link_href: string = "", link_onclick: string = "",
                 new_line: boolean = false){
@@ -26,6 +30,8 @@ class Word implements Token {
         this.link_href = link_href;
         this.link_onclick = link_onclick;
         this.new_line = new_line;
+        this.no_link_end = false;
+        this.no_link_begin = false;
     }
 
     // ------------------------------------------------------------------------
@@ -45,7 +51,15 @@ class Word implements Token {
             value = "<i>" + value + "</i>";
         }
         if(this.linked){
-            value = "<a href='" + this.link_href + "' onclick='" + this.link_onclick + "'>" + value + "</a>"
+            let new_value: string = "";
+            if(!this.no_link_begin){
+                new_value +=  "<a href='" + this.link_href + "' onclick='" + this.link_onclick + "'>";
+            }
+            new_value += value;
+            if(!this.no_link_end){
+                new_value += "</a>";
+            }
+            value = new_value;
         }
         return value;
     }

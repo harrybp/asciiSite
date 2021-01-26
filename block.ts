@@ -70,7 +70,17 @@ class Block {
             current_line = [];
 
             // For each word in the line
-            for(const word of line){
+            for(var j = 0; j < line.length; j++){
+                let word: Token = line[j];
+
+                // Clear any previous settings of link wrapping
+                if(word instanceof Word){
+                    let word_cast: Word = <Word>word;
+                    word_cast.no_link_end = false;
+                    word_cast.no_link_begin = false;
+                    word = word_cast;
+                }
+
                 current_line.push(word);
                 if(word != line[line.length - 1]){
                     current_line.push(new Space(1));
@@ -81,6 +91,45 @@ class Block {
             current_line.push(new Space(width - data.lengths[i] - 1));
             rendered_lines.push(current_line);
         }
+
+        // Do another pass to combine multi-word links
+        let previous_link: Word;
+        let previous_link_valid: boolean = false;
+        let previous_link_index: number = 0;
+        for(var i = 0; i < rendered_lines.length; i++){
+            previous_link_valid = false;
+
+            for(var j = 0; j < rendered_lines[i].length; j++){
+                if(rendered_lines[i][j] instanceof Word){
+                    let this_word: Word = <Word> rendered_lines[i][j];
+                    // Check if link
+                    if(this_word.linked){
+
+                        // Check if it matches the previous link
+                        if(previous_link_valid && (previous_link.link_href == this_word.link_href) &&
+                           (previous_link.link_onclick == this_word.link_onclick)){
+
+                            // If so, remove end tag from previous and start tag from this
+                            previous_link.no_link_end = true;
+                            this_word.no_link_begin = true;
+                        }
+
+                        // Update previous
+                        previous_link = this_word;
+                        previous_link_valid = true;
+                        previous_link_index = j;
+                    } else {
+                        previous_link_valid = false;
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
         return rendered_lines;
     }
 }

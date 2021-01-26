@@ -19,10 +19,14 @@ class Website {
 
     // ------------------------------------------------------------------------
     // Render the website to the DOM
-    render(): string {
+    render(popovers: Array<Popover>): string {
         this.update_dimensions();
         let rendered: Array<Array<Token>> = this.navbar.render(this.page_width, this.left_padding, this.selected_page);
         rendered = rendered.concat(this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding));
+
+        for(const popover of popovers){
+            rendered = popover.render(rendered, this.page_width);
+        }
 
         // Convert tokens to html
         let html: string = "";

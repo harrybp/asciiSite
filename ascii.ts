@@ -33,10 +33,17 @@ let pages: Array<Page> = [page0, page1];
 
 let site: Website = new Website(700, nav, pages);
 
+// Create popovers
+let popover_string: string = "Projects<br>About Me";
+let popover_content: Block = new Block(tokenize(popover_string));
+let popover: Popover = new Popover(0, popover_content);
+let popovers: Array<Popover> = [popover];
+
+
 // ----------------------------------------------------------------------------
 // Reload: Renders the page
 function reload(): void {
-    let new_html: string = site.render();
+    let new_html: string = site.render(popovers);
     document.body.innerHTML = new_html;
 }
 
@@ -56,6 +63,24 @@ function switch_page(page_index: number): void {
     reload();
 }
 
+// ----------------------------------------------------------------------------
+// Open Popover
+function open_popover(id_number: number): void {
+    console.log("Opening " + id_number);
+    for(var i = 0; i < popovers.length; i++){
+        if(i == id_number){
+            popover.active = true;
+        } else {
+            popover.active = false;
+        }
+    }
+    reload();
+}
+
 window.onresize = reload;
 window.onload = reload;
 
+// TODO:??
+//  I think perhaps instead of returning arrays of strings we should return arrays
+//  of words - where some words represent spacing which are all rendered out right
+//  at the end

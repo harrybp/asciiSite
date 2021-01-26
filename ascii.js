@@ -1,781 +1,442 @@
-//-----------------------------------------------------------------------------
-//  ASCII Webpage
-//    - By Harry
-//-----------------------------------------------------------------------------
-
-
-
-// ToDO
-// Tidy some methods up
-// Popup:can add content better etc
-// need one more padding on right??
-// imstead of passing function maybe pass id of element to show?
-//-----------------------------------------------------------------------------
-//               _____ _____
-//         /\   |  __ \_   _|     popover(key, content, width)
-//        /  \  | |__) || |       popup(key, content, size, position)
-//       / /\ \ |  ___/ | |       navbar(brand, links)
-//      / ____ \| |    _| |_      write(content, padChar, tabname)
-//     /_/    \_\_|   |_____|     columns(text1, text2, tabname, wrapamount)
-//                                tabs(tabInfo)
-//                                drawLine(char, fill)
-//                                blankLine()
-//
-//
-//-----------------------------------------------------------------------------
-//  Add popover of specified width and content
-//  Open it with openPopup(key)
-function popover(key, content, width){ globalPopovers[key] = { content: content, width: width }; }
-
-//-----------------------------------------------------------------------------
-//  Adds a popup of width = size located 1/position of the way down the page
-//  Open with openpopup(key)
-function popup(key, content, size, position, funcOpen, funcClose){
-    if(size > fullwidth) size = fullwidth;
-    var pos = (position)? position : 2;
-    if(typeof globalPopups[key] == 'undefined') globalPopups[key] = { key: key, size: size, position: pos, active: false, content: content };
-    globalPopups[key].size = size;
-    if(funcOpen) globalPopups[key].function = funcOpen;
-    if(funcOpen) globalPopups[key].functionClose = funcClose;
-
-}
-
-//-----------------------------------------------------------------------------
-//  Adds a navigation bar given a brand name and array of links objects:
-//    {
-//      text:     (String - The link display text),
-//      link:     (String - The link url),
-//      selected: (Boolean - True if link is for current page)
-//    }
-function navbar(brand, links, centered){
-    if(darkMode){
-        brand = brand.replace(/\^/gi, 'o');
+var Block = (function () {
+    function Block(text) {
+        this.contents = text;
     }
-    blankLine();
-    globalNav = {brand: brand, links: links};
-    var linkLength= 4;
-    var maxLength = 0;
-    var mobile = [];
-
-    // Get length of the links
-    for(var index in links){
-        linkLength += links[index].text.length;
-        if(links[index].text.length > maxLength) maxLength = links[index].text.length;
-    }
-
-    // Mobile links
-    for(var index in links){
-        if(!links[index].active)
-            mobile.push(pad('<a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a>', maxLength, ' '));
-        else
-            mobile.push(pad(links[index].text, maxLength, ' '));
-    }
-
-    var startBrand = centered? getGlobalLeftPadding().length + 2 : Math.floor(fullwidth / 10);
-    var finished = new Array(startBrand + 1).join(' ') + brand;
-
-    // Spacing between brand and first link
-    var initialSpacing = centered? Math.floor((fullwidth - (startBrand * 2) - linkLength)/1.75) :
-                                  Math.floor(fullwidth-linkLength-strip(brand).length-((links.length+1)*startBrand));
-
-    // Spacing between links
-    var spacing = centered? Math.floor((fullwidth - linkLength - strip(brand).length - (2 * startBrand) - initialSpacing)/(links.length - 1)) :
-                            startBrand + 1;
-
-    // Cutoff
-    var cutoff = centered? linkLength + strip(brand).length + 2*startBrand + initialSpacing + links.length : linkLength + strip(brand).length + 4*startBrand;
-
-    // Desktop
-    if(cutoff < fullwidth) {
-
-        console.log("spacing: " + initialSpacing + ", " + spacing);
-        finished += new Array(initialSpacing).join(' ');
-        for(var index in links){
-            finished += (links[index].active)? '['+links[index].text+']' : ' <a href="#" onclick="changePage(\'' + links[index].text + '\')">'+links[index].text + '</a> ';
-            if(index != links.length - 1)
-                finished += new Array(spacing).join(' ');//new Array(startBrand + 1).join(' ')
-        }
-    } else {
-        finished += new Array(fullwidth - 2 - (2*startBrand) - strip(brand).length).join(' ');
-        finished += '[<a href="#" onclick=openPopover("nav")>X</a>]';
-    }
-    popover('nav', mobile, maxLength);
-    linesArray.push({content: finished});
-    drawLine('_', true);
-}
-
-//-----------------------------------------------------------------------------
-//  Adds a paragraph to the page
-function write(content, padChar, tabname){
-    var padding = (padChar)? padChar : '|'
-        var lines = wrap(content, pageWidth-5);
-    for(var x = 0; x < lines.length; x++){
-        var finished = getGlobalLeftPadding() + padding + ' ' + lines[x] + ' ' + padding;
-        if(tabname)
-            linesArray.push({content: finished, tab: tabname});
-        else
-            linesArray.push({content: finished});
-    }
-}
-
-//-----------------------------------------------------------------------------
-//  Write two paragraphs in columns to the page
-//  Switches to rows when page width < wrapamount
-function columns(text1, text2, tabname, wrapamount, seperate){
-
-    var wrapAt = (typeof wrapamount != 'undefined' && wrapamount != null)? wrapamount : 50;
-    console.log(seperate)
-        if(fullwidth < wrapAt){
-            write(text1,'|',tabname);
-            if(seperate)
-                write(' ','|',tabname);
-            write(text2,'|',tabname);
-            return;
-        }
-    var availableWidth = pageWidth - 8;
-    var width1 = Math.floor(availableWidth/2);
-    var width2 = availableWidth - width1;
-    var lines1 = wrap(text1, width1, true);
-    var lines2 = wrap(text2, width2);
-    var total = '';
-    while(lines1.length > 0 || lines2.length > 0){
-        if(lines1.length == 0) var line1 = pad(' ', width1, ' ');
-        else var line1 = lines1.shift();
-        if(lines2.length == 0) var line2 = pad(' ', width2, ' ');
-        else var line2 = lines2.shift();
-        var finished = getGlobalLeftPadding() + "| " + line1 + ' | ' + line2 + ' |';
-        linesArray.push({content: finished, tab: tabname});
-    }
-}
-
-//-----------------------------------------------------------------------------
-//  Adds a tabs bar given a tabs object
-//  tabs = {
-//      key:            (REQUIRED - Each tabs bar needs a unique string key),
-//      links:          (REQUIRED - An Array of link objects),
-//      inline:         (Default = True - Set true for inline tabs, false for even spaced),
-//      topPadding:     (Default = '|' - For inline only - Padding for first two lines)
-//      bottomPadding:  (Default = '|' or same as top padding - For inline only - Padding for last line)
-//    }
-//
-//  link = {
-//      text:     (REQUIRED - The display text for the tab),
-//      link:     (Default = text - The id for this tab link),
-//      active:   (REQUIRED - True if tab is active)
-//    }
-function tabs(tabsGiven){
-    if(typeof globalTabs[tabsGiven.key] == 'undefined') globalTabs[tabsGiven.key] = tabsGiven;
-    for(var x = 0; x < globalTabs[tabsGiven.key].links.length;x++){
-        globalTabs[tabsGiven.key].links[x].link = (globalTabs[tabsGiven.key].links[x].link)? globalTabs[tabsGiven.key].links[x].link : globalTabs[tabsGiven.key].links[x].text
-    }
-    var tabs = globalTabs[tabsGiven.key];
-    var links = tabs.links;
-    var paddingAbove = (tabs.topPadding)? tabs.topPadding : '|';
-    var paddingBelow = (tabs.bottomPadding) ? tabs.bottomPadding : paddingAbove;
-    var line1 = line2 = getGlobalLeftPadding() + paddingAbove + ' ';
-    var line3 = getGlobalLeftPadding() + paddingBelow + '&#175;';
-    var count = 2;
-    for(var index = 0; index < links.length; index++){
-        var tab = links[index];
-        line1 += ' ' + new Array(tab.text.length + 2 + 1).join('_');
-        line2 += '| ';
-        if(!tab.active) line2 += '<a href="#", onclick="showTab(\''+tabs.key+'\',\''+tab.link+'\')">'
-            line2 += tab.text;
-        if(!tab.active) line2 += '</a>'
-            line2 += " ";
-        var line3Char = (tab.active)? ' ' : '&#175;';
-        line3 += line3Char + new Array(tab.text.length + 2 + 1).join(line3Char);
-        count += 3+ tab.text.length;
-        if(tab.active) activeTabs.push(tabsGiven.key +''+ tab.link);
-    }
-    line2 += '|';
-    line1 += " ";
-    line3 += '&#175;';
-    var missing = pageWidth - count - 3;
-    for(var x = 0; x < missing; x++){
-        line3 += '&#175;';
-        line1 += " ";
-        line2 += " ";
-    }
-    linesArray.push({content: line1 + paddingAbove});
-    linesArray.push({content: line2 + paddingAbove});
-    linesArray.push({content: line3 + paddingBelow});
-}
-
-//-----------------------------------------------------------------------------
-//  Draws a line of given character across the screen width
-//  Set fill = true to draw across full screen
-function drawLine(char, fill) {
-    var width = (fill)? fullwidth +1: pageWidth-2;
-    var finished = (typeof fill == 'undefined' || fill == false)? getGlobalLeftPadding() + ' ' : '';
-    finished += new Array(width ).join(char);
-    linesArray.push({content: finished});
-}
-
-//-----------------------------------------------------------------------------
-//  Writes a blank line
-function blankLine(){ linesArray.push({content: new Array(fullwidth + 1).join(' ') }); }
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//  UTILITIES:
-//    - PAGE SETUP METHODS
-//    - TEXT HELPER METHODS
-//    - POPUP METHODS
-//    - TAB METHODS
-window.onload = init;
-window.onresize = calculate;
-document.addEventListener("DOMContentLoaded", function(event) {
-        init();
-        });
-
-// ----------------------------------------------------------------------------
-// Dark Mode
-var darkMode = false;
-function toggleDarkMode(){
-    darkMode = !darkMode;
-    window.location.search = window.location.search.replace('darkmode='+ !darkMode, 'darkmode=' + darkMode);
-    calculate();
-}
-
-function applyDarkMode(){
-    var bgColour = '#e3e3e3';
-    var textColour = 'black';
-    var linkColour = 'blue';
-    if(darkMode){
-        bgColour = '#171717';
-        textColour = '#a6a6a6';
-        linkColour = '#9c0000';
-    }
-    document.body.style.backgroundColor = bgColour;
-    document.body.style.color = textColour;
-    var links = document.getElementsByTagName("a");
-    for(var i=0; i<links.length; i++){
-        if(links[i].href){
-            links[i].style.color = linkColour;
-        }
-    }
-}
-
-//
-//-----------------------------------------------------------------------------
-//  PAGE SETUP METHODS
-//    -init()
-//    -getWidth()
-//    -calculate()
-//    -getLineHeight()
-//    -getCharacterWidth()
-//    -getGlobalLeftPadding()
-//
-//-----------------------------------------------------------------------------
-//  On load, get configurations and initialise variables
-function init(){
-    activeTabs = [];
-    globalTabs = {};
-    globalPopups = {};
-    globalPopovers = {};
-    website.width = (typeof website.width !== 'undefined')? website.width : 700;
-    console.log(document.body.style.fontFamily)
-        document.body.style.cssText += 'white-space:pre-wrap;margin:0px;padding:0px;font-size: 16px;font-family:\'Courier New\', Courier, monospace;overflow-x:hidden;';
-    website.charWidth = getCharacterWidth();
-    website.lineHeight = getLineHeight();
-    calculate();
-}
-//-----------------------------------------------------------------------------
-//  Set fullwidth = screen width in characters, pageWidth = content width in characters
-function getWidth(){
-    console.log(document.body.clientWidth+":"+ document.body.scrollWidth)
-        var widthToUse = Math.min(document.body.clientWidth, document.body.scrollWidth);
-    console.log(widthToUse)
-        if(widthToUse > website.width && widthToUse/website.charWidth > 50){
-            fullwidth =  Math.floor(widthToUse/website.charWidth) ;
-            pageWidth = Math.floor(website.width/website.charWidth);
-            globalLeftPadding = Math.floor((fullwidth-pageWidth)/2);
-            globalRightPadding = fullwidth - pageWidth - globalLeftPadding;
-            console.log("X"+fullwidth);
-        }else {
-            globalLeftPadding = globalRightPadding =1;
-            pageWidth =  Math.floor(widthToUse/website.charWidth) -1;
-            fullwidth =Math.floor(widthToUse/website.charWidth);
-        }
-}
-//-----------------------------------------------------------------------------
-// Called to draw the page whenever the size changes
-function calculate(){
-    activeTabs = getActiveTabs();
-    getWidth();
-    build();
-    addPopups();
-    writeLines();
-    applyDarkMode();
-}
-//-----------------------------------------------------------------------------
-//  Changes page to pageName
-function changePage(pageName){
-    pageTitle = pageName;
-    window.location.search = '?page=' + pageTitle + '&darkmode=' + darkMode;
-    build();
-    writeLines();
-}
-//-----------------------------------------------------------------------------
-//  Parse website json and build page
-function build(){
-
-    // Extract page title and darkmode
-    var pageTitle;
-    if(window.location.search.indexOf('page=') > 0){
-        var param = window.location.search.substring(window.location.search.indexOf('page=')+5, window.location.search.length);
-        if(param.indexOf('&') != -1) param= param.substring(0, param.indexOf('&'));
-        if(param.length > 0) pageTitle =decodeURIComponent(param);
-    }
-    else {
-        if(window.location.search.indexOf('?') > -1){
-            window.location.search += '&page=' + website.pages[0].title;
-        } else{
-            window.location.search = '?page=' + website.pages[0].title;
-        }
-    }
-    pageTitle = (typeof pageTitle != 'undefined')? pageTitle : website.pages[0].title;
-    document.title = pageTitle;
-
-    var darkmode;
-    if(window.location.search.indexOf('darkmode=') > 0){
-        console.log(window.location.search);
-        var param = window.location.search.substring(window.location.search.indexOf('darkmode=')+9, window.location.search.length);
-        if(param.indexOf('&') != -1) param= param.substring(0, param.indexOf('&'));
-        if(param.length > 0) darkmode =decodeURIComponent(param);
-    }
-    else {
-        if(window.location.search.indexOf('?') > -1){
-            window.location.search += '&darkmode=false';
-        } else{
-            window.location.search += '?darkmode=false';
-        }
-    }
-    pageTitle = (typeof pageTitle != 'undefined')? pageTitle : website.pages[0].title;
-    darkMode = (typeof darkmode != 'undefined')? (darkmode.substring(0,4) == 'true') : false;
-    console.log('DM ' + darkmode)
-    applyDarkMode();
-
-    //Navbar
-    linesArray = [];
-    var links = [];
-    var thisPage;
-    for(var i = 0; i < website.pages.length; i++){
-        var page = website.pages[i];
-        var title = page.title;
-        var link = page.link;
-        if(title == pageTitle) thisPage = page;
-        links.push({text: title, link: link, active: (title == pageTitle)});
-    }
-    var brand = website.name;
-    var centered = true;
-    navbar(brand, links, centered);
-
-    //Page title
-    blankLine();
-    write(pageTitle, ' ')
-
-        //Tabs
-        if(thisPage.tabs.length > 1){
-            var links = [];
-            for(var x = 0; x < thisPage.tabs.length; x++){
-                links.push({text: thisPage.tabs[x].tabName, link: thisPage.tabs[x].tabName.toLowerCase(), active: (x == 0)});
+    Block.prototype.wrap = function (width) {
+        var lines = [];
+        var line_lengths = [];
+        var current_line = [];
+        var current_line_length = 0;
+        for (var _i = 0, _a = this.contents; _i < _a.length; _i++) {
+            var word = _a[_i];
+            if (!word.new_line && (word.text.length + current_line_length < width)) {
+                current_line.push(word);
+                current_line_length += word.text.length + 1;
             }
-            var tabsInfo = {
-key: 'tabs' + pageTitle,
-     links: links,
-     topPadding: ' ',
-     bottomPadding: '|'
-            }
-            tabs(tabsInfo);
-        } else {
-            drawLine('_');
-            write(' ');
-        }
-
-    //Content
-    for(var x = 0; x < thisPage.tabs.length; x++){
-        var tab = thisPage.tabs[x];
-        write(' > '+tab.title, '|', 'tabs' + pageTitle + tab.tabName.toLowerCase());
-        write('', '|', 'tabs' + pageTitle + tab.tabName.toLowerCase());
-        var content = (tab.content)?tab.content: [];
-        for(var y = 0; y < content.length; y++){
-            if(typeof content[y] == 'string')
-                write(content[y], '|', 'tabs'+ pageTitle + tab.tabName.toLowerCase());
             else {
-                switch(content[y].type){
-                    case 'columns':
-                        columns(content[y].text1, content[y].text2, 'tabs' + pageTitle + tab.tabName.toLowerCase(), null, (content[y].seperate!=false));
-                        break;
+                lines.push(current_line);
+                if (current_line_length > 0) {
+                    line_lengths.push(current_line_length - 1);
+                }
+                else {
+                    line_lengths.push(current_line_length);
+                }
+                current_line = [];
+                if (word.new_line) {
+                    current_line_length = 0;
+                }
+                else {
+                    current_line.push(word);
+                    current_line_length = word.text.length + 1;
                 }
             }
-            if(typeof content[y].seperate == 'undefined' || content[y].seperate)
-                write('', '|', 'tabs' + pageTitle + tab.tabName.toLowerCase());
         }
-    }
-    //Finish
-    drawLine('&#175;');
-
-    //Popups
-    if(thisPage.popups){
-        for(var x = 0; x < thisPage.popups.length; x++){
-            var popupInfo = thisPage.popups[x];
-            popup(x+1, popupInfo.title, popupInfo.width, popupInfo.position);
+        if (current_line.length > 0) {
+            lines.push(current_line);
+            line_lengths.push(current_line_length - 1);
         }
-    }
-
-    //Pop-overs
-    if(thisPage.popovers){
-        for(var x = 0; x < thisPage.popovers.length; x++){
-            var popoverInfo = thisPage.popovers[x];
-            popover(popoverInfo.key, popoverInfo.content, popoverInfo.width);
-        }
-    }
-}
-//-----------------------------------------------------------------------------
-//  Returns the height of one line in pixels
-function getLineHeight(){
-    var temp = document.createElement(document.body.nodeName);
-    temp.setAttribute("style","margin:0px;padding:0px;font-family:"+document.body.style.fontFamily+";font-size:"+document.body.style.fontSize);
-    temp.innerHTML = "test";
-    temp = document.body.parentNode.appendChild(temp);
-    var ret = temp.clientHeight;
-    temp.parentNode.removeChild(temp);
-    return ret;
-}
-//-----------------------------------------------------------------------------
-//  Returns the width of one character in pixels
-function getCharacterWidth(){ //Get the width of one monospaced character
-    var sizingSpan = document.createElement("span");
-    sizingSpan.innerHTML = '--------------------';
-    sizingSpan.style.cssText += 'position: absolute; top: -100px; padding: 0px;';
-    document.body.insertBefore(sizingSpan, document.body.firstChild);
-    var width = sizingSpan.clientWidth/20;
-    sizingSpan.parentNode.removeChild(sizingSpan);
-    console.log(width);
-    return width;
-}
-//-----------------------------------------------------------------------------
-//  Returns the padding applied to left of all lines
-function getGlobalLeftPadding(){ return new Array(globalLeftPadding+1).join(' '); }
-//-----------------------------------------------------------------------------
-//  Writes all lines to the page
-function writeLines(){
-    var total = '';
-    for(var x = 0; x < linesArray.length; x++){
-        if(typeof linesArray[x].tab == 'undefined' || activeTabs.indexOf(linesArray[x].tab) >= 0)
-            total += linesArray[x].content + '\n';
-    }
-    document.body.innerHTML = total;
-}
-
-//-----------------------------------------------------------------------------
-//  TEXT HELPER METHODS
-//    -wrap()
-//    -pad()
-//    -strip()
-//    -splitText()
-//
-//-----------------------------------------------------------------------------
-//  Wraps a text string into lines of given width
-function wrap(content, width, alignRight){
-    var wordsSplit = splitText(content);
-    var lines = [];
-    var line = '';
-    while(wordsSplit.length > 0){
-        if(strip(line).length + strip(wordsSplit[0].text).length < width){
-            var word = wordsSplit.shift();
-            if(word.link){
-                line += '<a href="' + word.href + '"' +((word.onclick)? ' onclick=' + word.onclick : '') + ((word.onmouseenter)? ' onmouseenter=' + word.onmouseenter : '') + ((word.onmouseleave)? ' onmouseleave=' + word.onmouseleave : '')+ ">" + word.text + "</a> ";
-            } else if(word.bold){
-                line += '<b>' + word.text + '</b> '
-            } else {
-                line += word.text + ' ';
+        return { lines: lines, lengths: line_lengths };
+    };
+    Block.prototype.render = function (width) {
+        var data = this.wrap(width);
+        var html_lines = [];
+        var current_line;
+        for (var i = 0; i < data.lines.length; i++) {
+            var line = data.lines[i];
+            current_line = "";
+            for (var _i = 0, line_1 = line; _i < line_1.length; _i++) {
+                var word = line_1[_i];
+                current_line += word.render();
+                if (word != line[line.length - 1]) {
+                    current_line += " ";
+                }
             }
-            if(line.indexOf('\n') != -1){
-                lines.push(pad(line.substring(0, line.indexOf('\n')), width, ' ', alignRight));
-                line = '';
+            current_line += Array(width - data.lengths[i]).join(" ");
+            html_lines.push(current_line);
+        }
+        return html_lines;
+    };
+    return Block;
+}());
+var Popover = (function () {
+    function Popover(id_number, content) {
+        this.id_number = id_number;
+        this.content = content;
+        this.active = false;
+        this.width = 8;
+    }
+    Popover.prototype.render = function (page_contents, width) {
+        if (this.active) {
+            var popover_html = this.content.render(this.width);
+            var search_string = "open_popover(" + this.id_number + ")";
+            for (var i = 0; i < page_contents.length; i++) {
+                var line = page_contents[i];
+                var index = line.indexOf(search_string);
+                if (index >= 0) {
+                    page_contents[i] = "poop";
+                }
             }
-        } else if(strip(wordsSplit[0].text).length >= width ){
-            var longword = wordsSplit.shift();
-            wordsSplit.unshift({text:longword.text.substring(longword.text.length/2, longword.text.length), link: longword.link, bold: longword.bold, href: longword.href, onclick: longword.onclick});
-            wordsSplit.unshift({text:longword.text.substring(0, longword.text.length/2), link: longword.link, bold: longword.bold, href: longword.href, onclick: longword.onclick});
-        } else {
-            lines.push(pad(line, width, ' ', alignRight));
-            line = '';
         }
+        return page_contents;
+    };
+    return Popover;
+}());
+var Tab = (function () {
+    function Tab(title, description, content) {
+        this.title = title;
+        this.description = description;
+        this.content = content;
     }
-    lines.push(pad(line, width, ' ', alignRight));
-    return lines;
-}
-//-----------------------------------------------------------------------------
-//  Pads a string to a given length with a given character
-function pad(line, length, character, alignRight){
-    if(line.length < 1) line = ' ';
-    if(alignRight){
-        while(strip(line).length < length){
-            line = character + line;
+    Tab.prototype.render = function (width, left_padding, right_padding) {
+        var lines = this.content.render(width - 3);
+        var html = this.render_description(width, left_padding, right_padding);
+        for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
+            var line = lines_1[_i];
+            var html_string = Array(left_padding + 1).join(" ") + "| ";
+            html_string += line + " |";
+            html_string += Array(right_padding + 1).join(" ");
+            html.push(html_string);
         }
-    } else {
-        while(strip(line).length < length){
-            line += character;
+        return html;
+    };
+    Tab.prototype.render_description = function (width, left_padding, right_padding) {
+        var html_string = "";
+        var html = [];
+        var desc_padding = width - this.description.length;
+        html_string += Array(left_padding + 1).join(" ") + "| ";
+        html_string += " > " + this.description + Array(desc_padding + 1 - 4 - 3).join(" ") + " |";
+        html_string += Array(right_padding + 1).join(" ");
+        html.push(html_string);
+        html_string = Array(left_padding + 1).join(" ") + "| ";
+        html_string += Array(width + 1 - 4).join(" ") + " |";
+        html_string += Array(right_padding + 1).join(" ");
+        html.push(html_string);
+        return html;
+    };
+    return Tab;
+}());
+var Page = (function () {
+    function Page(title, url, tabs) {
+        this.title = title;
+        this.url = url;
+        this.tabs = tabs;
+        this.selected_tab = 0;
+    }
+    Page.prototype.render = function (page_width, content_width, left_padding, right_padding) {
+        var html = [];
+        html.push(Array(page_width + 1).join(" "));
+        html = html.concat(this.render_title(page_width, left_padding));
+        html = html.concat(this.render_tab_selector(page_width, left_padding, content_width));
+        html = html.concat(this.tabs[this.selected_tab].render(content_width, left_padding, right_padding));
+        html = html.concat(this.render_bottom(left_padding, content_width, right_padding));
+        return html;
+    };
+    Page.prototype.render_bottom = function (left_padding, content_width, right_padding) {
+        var html_string = Array(left_padding + 1).join(" ") + "|";
+        html_string += Array(content_width - 1).join(" ") + "|";
+        html_string += Array(right_padding + 1).join(" ") + "\n";
+        html_string += Array(left_padding + 1).join(" ") + " ";
+        html_string += Array(content_width - 1).join("&#175;") + " ";
+        html_string += Array(right_padding + 1).join(" ");
+        return [html_string];
+    };
+    Page.prototype.render_title = function (width, left_padding) {
+        var html_string = Array(left_padding + 2).join(" ");
+        html_string += this.title;
+        html_string += Array(width - left_padding - this.title.length).join(" ");
+        return [html_string];
+    };
+    Page.prototype.render_tab_selector = function (width, left_padding, content_width) {
+        var line_1 = Array(left_padding + 4).join(" ");
+        var line_2 = Array(left_padding + 3).join(" ") + "|";
+        var line_2_length = line_2.length;
+        var line_3 = Array(left_padding + 1).join(" ") + "|@";
+        var index = 0;
+        for (var _i = 0, _a = this.tabs; _i < _a.length; _i++) {
+            var tab = _a[_i];
+            line_1 += Array(tab.title.length + 3).join("_") + " ";
+            line_2_length += tab.title.length;
+            if (index == this.selected_tab) {
+                line_2 += " " + tab.title + " |";
+                line_3 += Array(tab.title.length + 4).join(" ");
+            }
+            else {
+                line_2 += " <a href='#' onclick='switch_tab(" + index + ")'>" + tab.title + "</a> |";
+                line_3 += Array(tab.title.length + 4).join("@");
+            }
+            index++;
         }
+        line_1 += Array(width - line_1.length + 1).join(" ");
+        line_2 += Array(width - line_2_length).join(" ");
+        line_3 += Array(content_width + left_padding - line_3.length).join("@") + "|";
+        line_3 += Array(width - line_3.length + 1).join(" ");
+        line_3 = line_3.replace(/@/g, "&#175;");
+        if (this.tabs.length == 0) {
+            line_2 = "";
+        }
+        return [line_1, line_2, line_3];
+    };
+    return Page;
+}());
+var Navbar = (function () {
+    function Navbar(brand, page_names, page_links) {
+        this.brand = brand;
+        this.page_names = page_names;
+        this.page_links = page_links;
+        this.centered = true;
     }
-    return line;
-}
-//-----------------------------------------------------------------------------
-//  Removes all html tags and url encodings from a string
-function strip(text){
-    var div = document.createElement("div");
-    div.innerHTML = text;
-    var text = div.textContent || div.innerText || "";
-    if(text.indexOf('onclick=') != -1){
-        var x = text.substring(text.indexOf('onclick='), text.length);
-        text = text.substring(0,text.indexOf('onclick=')) + x.substring(x.indexOf('>'), x.length);
+    Navbar.prototype.render = function (width, left_padding, selected_page) {
+        this.update_dimensions(width, left_padding);
+        var html = [];
+        html.push(Array(width + 1).join(" "));
+        html = html.concat((this.mobile_cutoff < width) ? this.render_desktop_line(selected_page) : this.render_mobile_line());
+        html.push(Array(width + 1).join("_"));
+        return html;
+    };
+    Navbar.prototype.render_desktop_line = function (selected_page) {
+        var html_string = Array(this.start_brand_index).join(" ");
+        html_string += this.brand;
+        html_string += Array(this.initial_spacing).join(" ");
+        for (var i = 0; i < this.page_names.length; i++) {
+            if (i == selected_page) {
+                html_string += "[" + this.page_names[i] + "]";
+            }
+            else {
+                html_string += " <a href='#' onclick='switch_page(" + i + ")'>" + this.page_names[i] + "</a> ";
+            }
+            if (i != (this.page_names.length - 1)) {
+                html_string += Array(this.spacing).join(" ");
+            }
+        }
+        return [html_string];
+    };
+    Navbar.prototype.render_mobile_line = function () {
+        var html_string = Array(this.start_brand_index).join(" ");
+        html_string += this.brand;
+        html_string += Array(this.mobile_spacing).join(" ");
+        html_string += '[<a href="#" onclick=openPopover("nav")>X</a>]';
+        return [html_string];
+    };
+    Navbar.prototype.update_dimensions = function (page_width, left_padding) {
+        var link_length = this.page_names.reduce(function (x, y) { return x + y; }).length + 4;
+        if (this.centered) {
+            this.start_brand_index = left_padding + 2;
+            var side_padding = this.start_brand_index * 2;
+            this.initial_spacing = Math.floor((page_width - side_padding - link_length) * 0.6);
+            this.spacing = Math.floor((page_width - side_padding - link_length - this.brand.length - this.initial_spacing) / (this.page_names.length - 1));
+            this.mobile_cutoff = link_length + this.brand.length + (2 * this.start_brand_index) + this.initial_spacing + this.page_names.length;
+        }
+        else {
+            this.start_brand_index = Math.floor(page_width / 10);
+            this.initial_spacing = page_width - link_length - this.brand.length - ((links.length + 1) * this.start_brand_index);
+            this.spacing = this.start_brand_index + 1;
+            this.mobile_cutoff = link_length + this.brand.length + (4 * this.start_brand_index);
+        }
+        this.mobile_spacing = page_width - 2 - (2 * this.start_brand_index) - this.brand.length;
+    };
+    return Navbar;
+}());
+var Website = (function () {
+    function Website(content_width, navbar, pages) {
+        this.navbar = navbar;
+        this.target_content_pixel_width = content_width;
+        this.selected_page = 0;
+        this.pages = pages;
     }
-    return text.replace(/ /g, ' ');
+    Website.prototype.render = function (popovers) {
+        this.update_dimensions();
+        var new_html = this.navbar.render(this.page_width, this.left_padding, this.selected_page);
+        new_html = new_html.concat(this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding));
+        for (var _i = 0, popovers_1 = popovers; _i < popovers_1.length; _i++) {
+            var popover_1 = popovers_1[_i];
+            new_html = popover_1.render(new_html, this.page_width);
+        }
+        return new_html.join("\n");
+    };
+    Website.prototype.update_dimensions = function () {
+        var pixel_width = this.get_page_width();
+        var char_pixel_width = this.get_character_width();
+        this.page_width = Math.floor(pixel_width / char_pixel_width);
+        var min_line_chars = 50;
+        if ((pixel_width > this.target_content_pixel_width) && (this.page_width > min_line_chars)) {
+            this.content_width = Math.floor(this.target_content_pixel_width / char_pixel_width);
+            this.left_padding = Math.floor((this.page_width - this.content_width) / 2);
+            this.right_padding = this.page_width - this.content_width - this.left_padding;
+        }
+        else {
+            this.left_padding = 1;
+            this.right_padding = 1;
+            this.content_width = Math.floor(pixel_width / char_pixel_width) - 2;
+        }
+    };
+    Website.prototype.get_page_width = function () {
+        return Math.min(document.body.clientWidth, document.body.scrollWidth);
+    };
+    Website.prototype.get_character_width = function () {
+        var sizing_span = document.createElement("span");
+        sizing_span.innerHTML = '--------------------';
+        sizing_span.style.cssText += 'position: absolute; top: -100px; padding: 0px;';
+        document.body.insertBefore(sizing_span, document.body.firstChild);
+        var width = sizing_span.clientWidth / 20;
+        sizing_span.parentNode.removeChild(sizing_span);
+        return width;
+    };
+    return Website;
+}());
+var Word = (function () {
+    function Word(text, bold, italic, linked, link_href, link_onclick, new_line) {
+        if (bold === void 0) { bold = false; }
+        if (italic === void 0) { italic = false; }
+        if (linked === void 0) { linked = false; }
+        if (link_href === void 0) { link_href = ""; }
+        if (link_onclick === void 0) { link_onclick = ""; }
+        if (new_line === void 0) { new_line = false; }
+        this.text = text;
+        this.bold = bold;
+        this.italic = italic;
+        this.linked = linked;
+        this.link_href = link_href;
+        this.link_onclick = link_onclick;
+        this.new_line = new_line;
+    }
+    Word.prototype.render = function () {
+        var value = this.text;
+        if (this.bold) {
+            value = "<b>" + value + "</b>";
+        }
+        if (this.italic) {
+            value = "<i>" + value + "</i>";
+        }
+        if (this.linked) {
+            value = "<a href='" + this.link_href + "' onclick='" + this.link_onclick + "'>" + value + "</a>";
+        }
+        return value;
+    };
+    return Word;
+}());
+function pad_tags(text) {
+    text = text.replace(/<\/?(b|i|br)>/g, function (x) { return (" " + x + " "); });
+    text = text.replace(/<a.*?>/g, function (x) { return (" " + x + " "); });
+    text = text.replace(/<\/a>/g, " </a> ");
+    return text;
 }
-//-----------------------------------------------------------------------------
-//  Splits a string into an array of word objects with link info
-function splitText(content){
-    var wordsRaw = content.split(' ');
+function tokenize(text) {
+    text = pad_tags(text);
+    var raw_words = text.split(" ");
     var words = [];
-    var link = false;
-    var bold = false;
-    var totalWord = "";
-    for(var x = 0; x< wordsRaw.length; x++){
-        var word = wordsRaw[x];
-
-        // Link beginning
-        if(word.indexOf('<a') != -1){
-            if(word.length > 2){
-                words.push({text: strip(word.substring(0,word.indexOf('<a'))), link: link});
-                word = word.substring(word.indexOf('<a'), word.length);
+    var within_link = false;
+    var within_link_info = false;
+    var link_href;
+    var link_onclick;
+    var within_bold = false;
+    var within_italics = false;
+    for (var _i = 0, raw_words_1 = raw_words; _i < raw_words_1.length; _i++) {
+        var rawWord = raw_words_1[_i];
+        var this_word = rawWord;
+        if (this_word.length < 1) {
+            continue;
+        }
+        if (this_word == "<a") {
+            within_link_info = true;
+            link_href = "";
+            link_onclick = "";
+            continue;
+        }
+        if (within_link_info) {
+            if (this_word.indexOf("href=") != -1) {
+                link_href = this_word.substring(this_word.indexOf("href=") + 6, this_word.length);
+                var end_index = link_href.indexOf('"');
+                if (end_index == -1) {
+                    end_index = link_href.indexOf("'");
+                }
+                link_href = link_href.substring(0, end_index);
             }
-            link = true;
-            onclick = "";
-            totalWord = word;
-            continue;
-        }
-        // Bold words
-        if(word.indexOf("<b>") != -1){
-            bold = true;
-            totalWord = word;
-            continue;
-        }
-
-        // Ordinary case
-        if(!link & !bold){
-            words.push({text: strip(word), link: link, bold: bold});
-            continue;
-        }
-        totalWord += ' ' + word;
-
-        // Bold word ending
-        if(word.indexOf("</b>") != -1){
-            bold = false;
-            var bold_words = strip(totalWord).split(' ');
-            for(var y = 0; y < bold_words.length; y++){
-                words.push({text: bold_words[y], link: link, bold: true});
+            if (this_word.indexOf("onclick=") != -1) {
+                link_onclick = this_word.substring(this_word.indexOf("onclick=") + 9, this_word.length);
+                var end_index = link_onclick.indexOf('"');
+                if (end_index == -1) {
+                    end_index = link_onclick.indexOf("'");
+                }
+                link_onclick = link_onclick.substring(0, end_index);
             }
+            if (this_word.indexOf(">") != -1) {
+                within_link_info = false;
+                within_link = true;
+            }
+            continue;
         }
-
-        // Link info
-        if(word.indexOf('href=') != -1){
-            var href = word.substring(6,word.length);
-            href = href.substring(0, href.indexOf('"'));
+        if (within_link && this_word == "</a>") {
+            within_link = false;
+            continue;
         }
-        if(word.indexOf('onclick=') != -1){
-            var onclick = word.substring(8,word.length);
-            var index = (onclick.indexOf('>') > -1)? onclick.indexOf('>') : onclick.indexOf(' ');
-            onclick = onclick.substring(0, index);
+        if (this_word == "<b>" || this_word == "</b>") {
+            within_bold = this_word == "<b>";
+            continue;
         }
-        if(word.indexOf('onmouseenter=') != -1){
-            var onmouseenter = word.substring(13,word.length);
-            var index = (onmouseenter.indexOf('>') > -1)? onmouseenter.indexOf('>') : onmouseenter.indexOf(' ');
-            onmouseenter = onmouseenter.substring(0, index);
+        if (this_word == "<i>" || this_word == "</i>") {
+            within_italics = this_word == "<i>";
+            continue;
         }
-        if(word.indexOf('onmouseleave=') != -1){
-            var onmouseleave = word.substring(13,word.length);
-            var index = (onmouseleave.indexOf('>') > -1)? onmouseleave.indexOf('>') : onmouseleave.indexOf(' ');
-            onmouseleave = onmouseleave.substring(0, index);
+        if (this_word == "<br>") {
+            var new_word_1 = new Word("", within_bold, within_italics, within_link, link_href, link_onclick, true);
+            words.push(new_word_1);
+            continue;
         }
-
-        // Links ending
-        if(word.indexOf("</a>") != -1){
-            link = false;
-            var links = strip(totalWord).split(' ');
-            for(var y = 0; y < links.length; y++)
-                words.push({text: links[y], link: true, bold: false, href: href, onclick: onclick, onmouseenter: onmouseenter, onmouseleave: onmouseleave});
-        }
+        var new_word = new Word(this_word, within_bold, within_italics, within_link, link_href, link_onclick);
+        words.push(new_word);
     }
     return words;
 }
-
-//-----------------------------------------------------------------------------
-//  POPUP METHODS
-//    -openPopup()
-//    -closePopup()
-//    -addPopups()
-//    -getSquare()
-//
-//-----------------------------------------------------------------------------
-//  Sets a given popup to active
-function openPopup(key){
-    globalPopups[key].active = true;
-    calculate();
+var games_string = "Various Games made by <br>me over the last few years in my spare time. All were made completely from scratch either in pure HTML5 with <a href='#' onclick='open_popover(0)'>javascript</a> and the canvas or in C++ and compiled to web assembly. All should run in the browser. Only a couple of them work with mobile devices.<br><br><b>Cave Escape (2019 - Present)</b><br> Avoid the monsters and try to escape the vast cave system. Collect as many coins as possible. Created in C++ and compiled to web-assembly using emscripten. Still a work in progress.<br> <a href='games/cave_escape.html'>Click</a> to play<br><br><b>Ocean Simulator (2018)</b><br> Play with fishes and fish-eating worms in this fun little sandbox. This is an implementation of boids written in javascript.<br> <a href='games/ocean_simulator.html'>Click</a> to play<br><br><b>Bounce (2018)</b><br> Sort of like 2D single-player pong? Keep the ball from escaping! Created in javascript - works on mobile.<br> <a href='games/bounce.html'>Click</a> to play<br><br><b>Zombie Run (2017)</b><br> A side scrolling run-and-shoot type game with randomly generated caves. See how far you can get! Created in javascript - works on mobile.<br> <a href='games/zombie_run.html'>Click</a> to play<br><br><b>Meteor Shower (2017)</b><br> Dodge falling blocks and collect health cubes as you try to survive for as long as possible. Created in javascript.<br> <a href='games/meteor_shower.html'>Click</a> to play<br><br><b>Endless Climb (2017)</b><br> Race against time as you jump upwards from block to block in this fun little concept game. Created in javascript.<br> <a href='games/endless_climb.html'>Click</a> to play<br><br>Check my <a href='https://github.com/harrybp'>github</a> for more stuff";
+var other_string = "<b>Texture Generation using ML (2018)</b><br> Created as part of my final year project at uni, a demonstration of a few methods of synthesising unique textures using machine learning methods. <br> See the <a href='https://harrybp.github.io/texture_generation_demo/'>demo</a> or check it out on <a href='https://github.com/harrybp/TextureGeneration'>github</a><br><br><b>This website (2017 - Present)</b><br> A text-only interactive website built using javascript with support for a navbar, tabs, pop-ups, pop-overs and columns of text. Hint: try clicking the cat face in the nav bar! <br> Check it out on <a href='https://github.com/harrybp/asciiSite'>github</a>";
+var info_string = "Hi I'm Harry!<br><br>This website serves as an archive for all of the web projects I have worked on over the years. The stuff on here is all for fun - I have been trying to learn game development so a lot of the projects are little games. Feel free to check them out and contact me with any feedback.";
+var contact_string = "";
+var page0_tab0_content = new Block(tokenize(games_string));
+var page0_tab0 = new Tab("Games", "Game Projects", page0_tab0_content);
+var page0_tab1_content = new Block(tokenize(other_string));
+var page0_tab1 = new Tab("Other", "Other Projects", page0_tab1_content);
+var page0_tabs = [page0_tab0, page0_tab1];
+var page0 = new Page("Projects", "projects.html", page0_tabs);
+var page1_tab0_content = new Block(tokenize(info_string));
+var page1_tab0 = new Tab("Info", "Site Information", page1_tab0_content);
+var page1_tab1_content = new Block(tokenize(contact_string));
+var page1_tab1 = new Tab("Contact", "Contact Information", page1_tab1_content);
+var page1_tabs = [page1_tab0, page1_tab1];
+var page1 = new Page("About Me", "about.html", page1_tabs);
+var page_names = ["Projects", "About Me"];
+var links = ["projects.html", "about.html"];
+var nav = new Navbar("harrycats", page_names, links);
+var pages = [page0, page1];
+var site = new Website(700, nav, pages);
+var popover_string = "Projects<br>About Me";
+var popover_content = new Block(tokenize(popover_string));
+var popover = new Popover(0, popover_content);
+var popovers = [popover];
+function reload() {
+    var new_html = site.render(popovers);
+    document.body.innerHTML = new_html;
 }
-//-----------------------------------------------------------------------------
-//  Sets all popups to inactive
-function closePopup(){
-    for(var key in globalPopups){
-        globalPopups[key].active = false;
-        // if(globalPopups[key].functionClose) eval(globalPopups[key].functionClose);
-    }
-    calculate();
+function switch_tab(tab_index) {
+    pages[site.selected_page].selected_tab = tab_index;
+    console.log("Selected tab: " + tab_index);
+    reload();
 }
-//-----------------------------------------------------------------------------
-//  Adds all active popups to the page
-function addPopups(){
-    for(var x in globalPopups){
-        if(globalPopups[x].active){
-            var activeTabs = getActiveTabs();
-            var finished = '';
-            var popup = globalPopups[x];
-            var square = getSquare(popup.size, popup.content, true);
-            var startH = Math.floor((Math.floor(window.innerHeight / getLineHeight()) - square.length)/popup.position);
-            var startW = Math.floor((fullwidth - popup.size)/2);
-            for(var x =  startH; square.length > 0 || x < linesArray.length-1; x++){
-                var tabName = (typeof linesArray[x] != 'undefined')? linesArray[x].tab : undefined;
-                var line = (x < linesArray.length)? strip(linesArray[x].content) : pad(' ', fullwidth, ' ');
-                if(typeof tabName == 'undefined' || activeTabs.indexOf(tabName) >= 0 && square.length > 0){
-                    line = line.substring(0, startW) + square.shift() + line.substring(startW + popup.size, line.length) ;
-                    if(linesArray[x]) linesArray[x].content = line;
-                    else linesArray.push({content: line})
-                }
-            }
+function switch_page(page_index) {
+    site.selected_page = page_index;
+    console.log("Selected page: " + page_index);
+    reload();
+}
+function open_popover(id_number) {
+    console.log("Opening " + id_number);
+    for (var i = 0; i < popovers.length; i++) {
+        if (i == id_number) {
+            popover.active = true;
+        }
+        else {
+            popover.active = false;
         }
     }
+    reload();
 }
-//-----------------------------------------------------------------------------
-//  Returns the lines of a square with a given width and contents
-//  Used for the popup body
-function getSquare(width, string, cross){
-    var height = Math.floor(width * getCharacterWidth() /getLineHeight());
-    var finished = [];
-    var content = wrap(string, width - 4)
-        finished.push(' ' + new Array(width -1).join('_') + ' ');
-    for(var x = 1; x < height-1; x++){
-        var thisLine = (content[x-2])? content[x-2] : pad(' ', width - 4, ' ');
-        if(cross && x == 1) finished.push("|" +  new Array(width - 4).join(' ') + '[<a href="#", onclick="closePopup()">X</a>]|');
-        else finished.push("| " +  thisLine+ ' |');
-    }
-    finished.push(' ' + new Array(width -1).join('&#175;') + ' ');
-    return finished;
-}
-
-//-----------------------------------------------------------------------------
-//  TAB METHODS
-//    -showTab()
-//    -getActiveTabs()
-//-----------------------------------------------------------------------------
-//  Sets a given tab to active
-function showTab(key, tabname){
-    for(var tabIndex in globalTabs[key].links){
-        if(globalTabs[key].links[tabIndex].link == tabname){
-            globalTabs[key].links[tabIndex].active = true;
-        } else {
-            globalTabs[key].links[tabIndex].active = false;
-        }
-    }
-    calculate();
-}
-//-----------------------------------------------------------------------------
-//  Returns array of active tabs
-function getActiveTabs(){
-    var activeTabs = [];
-    for(var index in globalTabs)
-        for(var index2 in globalTabs[index].links)
-            if(globalTabs[index].links[index2].active)
-                activeTabs.push(globalTabs[index].key + "" + globalTabs[index].links[index2].link);
-    return activeTabs;
-}
-//-----------------------------------------------------------------------------
-//  POPOVER METHODS
-//    -openPopover()
-//-----------------------------------------------------------------------------
-//  Shows the popover with the selected key
-function openPopover(key){
-    var width = (globalPopovers[key].width > fullwidth - 4)? fullwidth - 4 : globalPopovers[key].width;
-    var data = (typeof globalPopovers[key].content == 'string')? wrap(globalPopovers[key].content, width) : globalPopovers[key].content;
-    var writing = false;
-    var click = false;
-    var startData, endData, difference;
-    var otherDifference;
-
-    // Loop over page
-    for(var x = 0; x < linesArray.length; x++){
-
-        // Find when the popover toggle link
-        var start = linesArray[x].content.indexOf('<a href="#" onmouseenter=openPopover("'+ key + '")');
-        if(start == -1 && linesArray[x].content.indexOf('<a href="#" onclick=openPopover("'+ key + '")') != -1){
-            start = linesArray[x].content.indexOf('<a href="#" onclick=openPopover("'+ key + '")');
-            click = true;
-        }
-        if(start >= 0){
-
-            // The line of the popover toggle link
-            var end = linesArray[x].content.substring(start,linesArray[x].content.length);
-            end = end.indexOf('</a>')+4+start;
-            var linkText = strip(linesArray[x].content.substring(start,end));
-            var difference = linesArray[x].content.substring(start,end).length - linkText.length;
-            otherDifference = linesArray[x].content.length - strip(linesArray[x].content).length - difference;
-            var padLeft = Math.floor((width - linkText.length) / 2);
-            var padRight = width - linkText.length - padLeft;
-            if(start - padLeft < 0){
-                var dif = -(start - padLeft) +2;
-                padRight += dif;
-                padLeft -= dif;
-            } else if(end + padRight >= linesArray[x].content.length){
-                var dif2 = linesArray[x].content.length - (end+padRight)-2;
-                padRight += dif2;
-                padLeft -= dif2;
-            }
-            start -= otherDifference;
-            end -= otherDifference
-            startData = start - padLeft;
-            console.log("Start: " + start + ", padleft: " + padLeft);
-            endData = end + padRight;
-                        console.log(linesArray[x].content + "  " + difference);
-
-            // Rebuild line
-            linesArray[x].content = linesArray[x].content.substring(0, startData-2 + otherDifference) + ' '+ new Array(padLeft+1).join('_') + ((click)? '[<a href="#" onclick=calculate()>' : '[<a href="#" onmouseleave=calculate()>' )+ linkText + "</a>]" + new Array(padRight+1).join('_') +' '+ linesArray[x].content.substring(endData+2 + otherDifference, linesArray[x].content.length);
-            writing = true;
-            continue;
-        }
-        if(writing && (typeof linesArray[x].tab == 'undefined' || activeTabs.indexOf(linesArray[x].tab) >= 0)){
-            console.log("a: " + linesArray[x].content);
-            if(data.length > 0){
-                linesArray[x].content = strip(linesArray[x].content).substring(0, startData-2) + "| " + data.shift()+ " |" +linesArray[x].content.substring(endData+2-difference, linesArray[x].content.length);
-            } else {
-                linesArray[x].content = strip(linesArray[x].content).substring(0, startData-2) + ' ' + new Array(width+3).join("&#175;") +' ' + linesArray[x].content.substring(endData+2-difference, linesArray[x].content.length);
-                writing = false;
-            }
-        }
-    }
-    writeLines();
-    applyDarkMode();
-}
-
-
-
-
-
-
-
-
+window.onresize = reload;
+window.onload = reload;

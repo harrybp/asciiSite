@@ -33,7 +33,7 @@ class Navbar {
 
         // Nav line
         if(width < this.mobile_cutoff){
-            rendered.push(this.render_mobile_line());
+            rendered.push(this.render_mobile_line(selected_page));
         } else {
             rendered.push(this.render_desktop_line(selected_page));
         }
@@ -74,13 +74,13 @@ class Navbar {
 
     // ------------------------------------------------------------------------
     // Render the navbar line for mobile
-    render_mobile_line(): Array<Token> {
+    render_mobile_line(selected_page: number): Array<Token> {
         let rendered_line: Array<Token> = [];
         rendered_line.push(new Space(this.start_brand_index - 1));
         rendered_line.push(new Word(this.brand));
         rendered_line.push(new Space(this.mobile_spacing - 1));
         rendered_line.push(new Word("["));
-        rendered_line.push(new Word("X", false, false, true, "#", "'openPopover(0)'"));
+        rendered_line.push(new Word("X", false, false, true, "#", "open_popover(" + selected_page + ")"));
         rendered_line.push(new Word("]"));
         return rendered_line;
     }

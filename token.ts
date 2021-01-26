@@ -71,6 +71,8 @@ class Space implements Token {
     // ------------------------------------------------------------------------
     // Render the html
     render(): string {
+        if(this.space_length < 0)
+            console.log("Space of length: " + this.space_length);
         return Array(this.space_length + 1).join(this.space_value);
     }
 }

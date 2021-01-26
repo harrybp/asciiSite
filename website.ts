@@ -21,9 +21,18 @@ class Website {
     // Render the website to the DOM
     render(): string {
         this.update_dimensions();
-        let new_html: Array<string> = this.navbar.render(this.page_width, this.left_padding, this.selected_page);
-        new_html = new_html.concat(this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding))
-        return new_html.join("\n");
+        let rendered: Array<Array<Token>> = this.navbar.render(this.page_width, this.left_padding, this.selected_page);
+        rendered = rendered.concat(this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding));
+
+        // Convert tokens to html
+        let html: string = "";
+        for(const line of rendered){
+            for(const token of line){
+                html += token.render();
+            }
+            html += "\n";
+        }
+        return html;
     }
 
     // ------------------------------------------------------------------------

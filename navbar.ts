@@ -22,46 +22,67 @@ class Navbar {
 
     // ------------------------------------------------------------------------
     // Render the navbar to a string
-    render(width: number, left_padding: number, selected_page: number): Array<string> {
+    render(width: number, left_padding: number, selected_page: number): Array<Array<Token>> {
         this.update_dimensions(width, left_padding);
+        let rendered: Array<Array<Token>> = [];
 
-        // Build the html lines
-        let html: Array<string> = [];
-        html.push(Array(width+1).join(" ")); // Blank line
-        html = html.concat((this.mobile_cutoff < width)? this.render_desktop_line(selected_page) : this.render_mobile_line());
-        html.push(Array(width+1).join("_"));
-        return html;
+        // Blank line
+        let rendered_line: Array<Token> = [];
+        rendered_line.push(new Space(width));
+        rendered.push(rendered_line);
+
+        // Nav line
+        if(width < this.mobile_cutoff){
+            rendered.push(this.render_mobile_line());
+        } else {
+            rendered.push(this.render_desktop_line(selected_page));
+        }
+
+        // Line
+        rendered_line = [];
+        rendered_line.push(new Space(width, "_"));
+        rendered.push(rendered_line);
+
+        return rendered;
     }
 
     // ------------------------------------------------------------------------
     // Render the navbar line for desktop
-    render_desktop_line(selected_page: number): Array<string> {
+    render_desktop_line(selected_page: number): Array<Token> {
 
         // Brand spacing ~ Brand ~ Initial spacing ~ link0 ~ spacing ~ link1
-        let html_string: string = Array(this.start_brand_index).join(" ");
-        html_string += this.brand;
-        html_string += Array(this.initial_spacing).join(" ");
+        let rendered_line: Array<Token> = [];
+        rendered_line.push(new Space(this.start_brand_index - 1));
+        rendered_line.push(new Word(this.brand));
+        rendered_line.push(new Space(this.initial_spacing - 1));
         for(var i = 0; i < this.page_names.length; i++){
             if(i == selected_page){
-                html_string += "[" + this.page_names[i] + "]";
+                rendered_line.push(new Word("["));
+                rendered_line.push(new Word(this.page_names[i]));
+                rendered_line.push(new Word("]"));
             } else {
-                html_string += " <a href='#' onclick='switch_page(" + i + ")'>" + this.page_names[i] + "</a> ";
+                rendered_line.push(new Space(1));
+                rendered_line.push(new Word(this.page_names[i], false, false, true, "#", "switch_page(" + i + ")"));
+                rendered_line.push(new Space(1));
             }
             if(i != (this.page_names.length - 1)){
-                html_string += Array(this.spacing).join(" ");
+                rendered_line.push(new Space(this.spacing - 1));
             }
         }
-        return [html_string];
+        return rendered_line;
     }
 
     // ------------------------------------------------------------------------
     // Render the navbar line for mobile
-    render_mobile_line(): Array<string> {
-        let html_string: string = Array(this.start_brand_index).join(" ");
-        html_string += this.brand;
-        html_string += Array(this.mobile_spacing).join(" ");
-        html_string += '[<a href="#" onclick=openPopover("nav")>X</a>]';
-        return [html_string];
+    render_mobile_line(): Array<Token> {
+        let rendered_line: Array<Token> = [];
+        rendered_line.push(new Space(this.start_brand_index - 1));
+        rendered_line.push(new Word(this.brand));
+        rendered_line.push(new Space(this.mobile_spacing - 1));
+        rendered_line.push(new Word("["));
+        rendered_line.push(new Word("X", false, false, true, "#", "'openPopover(0)'"));
+        rendered_line.push(new Word("]"));
+        return rendered_line;
     }
 
     // ------------------------------------------------------------------------

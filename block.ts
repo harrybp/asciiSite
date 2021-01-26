@@ -59,28 +59,28 @@ class Block {
 
     // ------------------------------------------------------------------------
     // Return the block as lines of html
-    render(width: number): Array<string> {
+    render(width: number): Array<Array<Token>> {
         let data: Block_Data = this.wrap(width);
-        let html_lines: Array<string> = [];
-        let current_line: string;
+        let rendered_lines: Array<Array<Token>> = [];
+        let current_line: Array<Token>;
 
         // For each line in the wrapped text
         for(var i = 0; i < data.lines.length; i++){
             let line: Array<Word> = data.lines[i];
-            current_line = "";
+            current_line = [];
 
             // For each word in the line
             for(const word of line){
-                current_line += word.render();
+                current_line.push(word);
                 if(word != line[line.length - 1]){
-                    current_line += " ";
+                    current_line.push(new Space(1));
                 }
             }
 
             // Make the line the correct length
-            current_line += Array(width - data.lengths[i]).join(" ");
-            html_lines.push(current_line);
+            current_line.push(new Space(width - data.lengths[i] - 1));
+            rendered_lines.push(current_line);
         }
-        return html_lines;
+        return rendered_lines;
     }
 }

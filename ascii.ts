@@ -11,18 +11,24 @@ let contact_string: string = "You can email me at <a href='mailto:harrybp@me.com
 
 // First create a tab with a block of content
 let page0_tab0_content: Block = new Block(tokenize(games_string));
-let page0_tab0: Tab = new Tab("Games", "Game Projects", page0_tab0_content);
+let page0_tab0_desc: Block = new Block(tokenize("Game Projects"));
+let page0_tab0: Tab = new Tab("Games", page0_tab0_desc, page0_tab0_content);
 let page0_tab1_content: Block = new Block(tokenize(other_string));
-let page0_tab1: Tab = new Tab("Other", "Other Projects", page0_tab1_content);
+let page0_tab1_desc: Block = new Block(tokenize("Other Projects"));
+let page0_tab1: Tab = new Tab("Other", page0_tab1_desc, page0_tab1_content);
 let page0_tabs: Array<Tab> = [page0_tab0, page0_tab1];
-let page0: Page = new Page("Projects", "projects.html", page0_tabs);
+let page0_title: Block = new Block(tokenize("Projects"));
+let page0: Page = new Page(page0_title, "projects.html", page0_tabs);
 
 let page1_tab0_content: Block = new Block(tokenize(info_string));
-let page1_tab0: Tab = new Tab("Info", "Site Information", page1_tab0_content);
+let page1_tab0_desc: Block = new Block(tokenize("Site Information"));
+let page1_tab0: Tab = new Tab("Info", page1_tab0_desc, page1_tab0_content);
 let page1_tab1_content: Block = new Block(tokenize(contact_string));
-let page1_tab1: Tab = new Tab("Contact", "Contact Information", page1_tab1_content);
+let page1_tab1_desc: Block = new Block(tokenize("Contact Information"));
+let page1_tab1: Tab = new Tab("Contact", page1_tab1_desc, page1_tab1_content);
 let page1_tabs: Array<Tab> = [page1_tab0, page1_tab1];
-let page1: Page = new Page("About Me", "about.html", page1_tabs);
+let page1_title: Block = new Block(tokenize("About meeee eeeee"));
+let page1: Page = new Page(page1_title, "about.html", page1_tabs);
 
 // Then create a navbar
 let page_names: Array<string> = ["Projects", "About Me"];

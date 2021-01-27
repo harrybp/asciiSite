@@ -109,6 +109,6 @@ class Navbar {
             this.spacing = this.start_brand_index + 1;
             this.mobile_cutoff = link_length + brand_length + (4 * this.start_brand_index);
         }
-        this.mobile_spacing = page_width - 2 - (2 * this.start_brand_index) - brand_length;
+        this.mobile_spacing = page_width  - (2 * this.start_brand_index) - brand_length;
     }
 }

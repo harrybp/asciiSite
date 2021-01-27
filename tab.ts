@@ -2,10 +2,10 @@
 // The tab actually holds the page's content
 class Tab {
     title: string;
-    description: string;
+    description: Block;
     content: Block;
 
-    constructor(title: string, description: string, content: Block){
+    constructor(title: string, description: Block, content: Block){
         this.title = title;
         this.description = description;
         this.content = content;
@@ -37,19 +37,27 @@ class Tab {
     render_description(width: number, left_padding: number, right_padding: number): Array<Array<Token>> {
         let rendered_line: Array<Token> = [];
         let rendered: Array<Array<Token>> = [];
-        let desc_padding: number = width - this.description.length;
+        let rendered_desc: Array<Array<Token>> = this.description.render(width - 5);
+        console.log(rendered_desc.length);
 
         // Description line
-        rendered_line.push(new Space(left_padding));
-        rendered_line.push(new Word("|"));
-        rendered_line.push(new Space(2));
-        rendered_line.push(new Word(">"));
-        rendered_line.push(new Space(1));
-        rendered_line.push(new Word(this.description));
-        rendered_line.push(new Space(desc_padding - 6));
-        rendered_line.push(new Word("|"));
-        rendered_line.push(new Space(right_padding));
-        rendered.push(rendered_line);
+        for(var i = 0; i < rendered_desc.length; i++){
+            let desc: Array<Token> = rendered_desc[i];
+            rendered_line = [];
+            rendered_line.push(new Space(left_padding));
+            rendered_line.push(new Word("|"));
+            rendered_line.push(new Space(2));
+            if(i == 0){
+                rendered_line.push(new Word(">"));
+            } else {
+                rendered_line.push(new Space(1));
+            }
+            rendered_line.push(new Space(1));
+            rendered_line = rendered_line.concat(desc);
+            rendered_line.push(new Word("|"));
+            rendered_line.push(new Space(right_padding));
+            rendered.push(rendered_line);
+        }
 
         // Empty Line
         rendered_line = [];

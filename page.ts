@@ -1,12 +1,12 @@
 // ----------------------------------------------------------------------------
 // Page represents one page of the website, it can hold many tabs
 class Page {
-    title: string;
+    title: Block;
     url: string;
     tabs: Array<Tab>;
     selected_tab: number;
 
-    constructor(title: string, url: string, tabs: Array<Tab>) {
+    constructor(title: Block, url: string, tabs: Array<Tab>) {
         this.title = title;
         this.url = url;
         this.tabs = tabs;
@@ -20,8 +20,7 @@ class Page {
         let rendered_line: Array<Token> = [];
         rendered_line.push(new Space(page_width));
         rendered.push(rendered_line);
-
-        rendered.push(this.render_title(page_width, left_padding));
+        rendered = rendered.concat(this.render_title(page_width, left_padding, content_width));
         rendered = rendered.concat(this.render_tab_selector(page_width, left_padding, content_width));
         rendered = rendered.concat(this.tabs[this.selected_tab].render(content_width, left_padding, right_padding));
         rendered = rendered.concat(this.render_bottom(left_padding, content_width, right_padding));
@@ -51,12 +50,17 @@ class Page {
 
     // ------------------------------------------------------------------------
     // The title shows at the top of the page
-    render_title(width: number, left_padding: number): Array<Token>{
-        let rendered_line: Array<Token> = [];
-        rendered_line.push(new Space(left_padding + 2));
-        rendered_line.push(new Word(this.title));
-        rendered_line.push(new Space(width - left_padding - this.title.length));
-        return rendered_line;
+    render_title(width: number, left_padding: number, content_width: number): Array<Array<Token>>{
+        let rendered_lines: Array<Array<Token>> = [];
+        let rendered_title: Array<Array<Token>> = this.title.render(content_width - 1);
+        for(const line of rendered_title){
+            let rendered_line: Array<Token> = [];
+            rendered_line.push(new Space(left_padding + 2));
+            rendered_line = rendered_line.concat(line);
+            rendered_line.push(new Space(width - left_padding - content_width));
+            rendered_lines.push(rendered_line);
+        }
+        return rendered_lines;
     }
 
     // ------------------------------------------------------------------------

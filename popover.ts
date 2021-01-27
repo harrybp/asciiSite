@@ -64,7 +64,7 @@ class Popover {
             let popover_bottom: Array<Token> = [];
             popover_bottom.push(new Space(this.width + 1, "&#175;"))
             popover_rendered.push(popover_bottom);
-            console.log("RLO: " + relative_left_offset + ", LO: " + left_offset + ", RO: " + right_offset + "P: " + indexes[2] + ", T: " + trigger_length);
+            //console.log("RLO: " + relative_left_offset + ", LO: " + left_offset + ", RO: " + right_offset + "P: " + indexes[2] + ", T: " + trigger_length);
 
             // 4 stages per line:
             // 0: waiting for popover left_index, print the tokens as normal

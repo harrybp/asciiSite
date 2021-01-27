@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // Website is constructed here
 
-let games_string: string = "Various Games made by me over the last few years in my spare time. All were made completely from scratch either in pure HTML5 with javascript and the canvas or in C++ and compiled to web assembly. All should run in the browser. Only a couple of them work with mobile devices.<br><br><b>Cave Escape (2019 - Present)</b><br> Avoid the monsters and try to escape the vast cave system. Collect as many coins as possible. Created in C++ and compiled to web-assembly using emscripten. Still a work in progress.<br> <a href='games/cave_escape.html'>Click</a> to play<br><br><b>Ocean Simulator (2018)</b><br> Play with fishes and fish-eating worms in this fun little sandbox. This is an implementation of boids written in javascript.<br> <a href='games/ocean_simulator.html'>Click</a> to play<br><br><b>Bounce (2018)</b><br> Sort of like 2D single-player pong? Keep the ball from escaping! Created in javascript - works on mobile.<br> <a href='games/bounce.html'>Click</a> to play<br><br><b>Zombie Run (2017)</b><br> A side scrolling run-and-shoot type game with randomly generated caves. See how far you can get! Created in javascript - works on mobile.<br> <a href='games/zombie_run.html'>Click</a> to play<br><br><b>Meteor Shower (2017)</b><br> Dodge falling blocks and collect health cubes as you try to survive for as long as possible. Created in javascript.<br> <a href='games/meteor_shower.html'>Click</a> to play<br><br><b>Endless Climb (2017)</b><br> Race against time as you jump upwards from block to block in this fun little concept game. Created in javascript.<br> <a href='games/endless_climb.html'>Click</a> to play<br><br>Check my <a href='https://github.com/harrybp'>github</a> for more stuff";
+let games_string: string = "Various Games made by me over the last few years in my spare time. All were made completely from scratch either in pure HTML5 with javascript and the canvas or in C++ and compiled to web assembly. All should run in the browser. Only a couple of them work with mobile devices.<br><br><b>Cave Escape (2019 - Present)</b><br> Avoid the monsters and try to escape the vast cave system. Collect as many coins as possible. Created in C++ and compiled to web-assembly using emscripten. Still a work in progress.<br> <a href='games/cave_escape.html'>Click</a> to play<br><br><b>Ocean Simulator (2018)</b><br> Play with fishes and <a onclick='open_popover(2)'>fish-eating worms</a> in this fun little sandbox. This is an implementation of boids written in javascript.<br> <a href='games/ocean_simulator.html'>Click</a> to play<br><br><b>Bounce (2018)</b><br> Sort of like 2D single-player pong? Keep the ball from escaping! Created in javascript - works on mobile.<br> <a href='games/bounce.html'>Click</a> to play<br><br><b>Zombie Run (2017)</b><br> A side scrolling run-and-shoot type game with randomly generated caves. See how far you can get! Created in javascript - works on mobile.<br> <a href='games/zombie_run.html'>Click</a> to play<br><br><b>Meteor Shower (2017)</b><br> Dodge falling blocks and collect health cubes as you try to survive for as long as possible. Created in javascript.<br> <a href='games/meteor_shower.html'>Click</a> to play<br><br><b>Endless Climb (2017)</b><br> Race against time as you jump upwards from block to block in this fun little concept game. Created in javascript.<br> <a href='games/endless_climb.html'>Click</a> to play<br><br>Check my <a href='https://github.com/harrybp'>github</a> for more stuff";
 
 let other_string: string = "<b>Texture Generation using ML (2018)</b><br> Created as part of my final year project at uni, a demonstration of a few methods of synthesising unique textures using machine learning methods. <br> See the <a href='https://harrybp.github.io/texture_generation_demo/'>demo</a> or check it out on <a href='https://github.com/harrybp/TextureGeneration'>github</a><br><br><b>This website (2017 - Present)</b><br> A text-only interactive website built using javascript with support for a navbar, tabs, pop-ups, pop-overs and columns of text. Hint: try clicking the cat face in the nav bar! <br> Check it out on <a href='https://github.com/harrybp/asciiSite'>github</a>";
 
@@ -27,7 +27,7 @@ let page1_tab1_content: Block = new Block(tokenize(contact_string));
 let page1_tab1_desc: Block = new Block(tokenize("Contact Information"));
 let page1_tab1: Tab = new Tab("Contact", page1_tab1_desc, page1_tab1_content);
 let page1_tabs: Array<Tab> = [page1_tab0, page1_tab1];
-let page1_title: Block = new Block(tokenize("About meeee eeeee"));
+let page1_title: Block = new Block(tokenize("About me"));
 let page1: Page = new Page(page1_title, "about.html", page1_tabs);
 
 // Then create a navbar
@@ -51,7 +51,11 @@ let popover_content_0: Block = new Block(tokenize(popover_string_0));
 let popover_content_1: Block = new Block(tokenize(popover_string_1));
 let popover_0: Popover = new Popover(0, popover_content_0, 8);
 let popover_1: Popover = new Popover(1, popover_content_1, 8);
-let popovers: Array<Popover> = [popover_0, popover_1];
+
+let popover_string_2: string = "Well that sounds fun!";
+let popover_content_2: Block = new Block(tokenize(popover_string_2));
+let popover_2: Popover = new Popover(2, popover_content_2, 12);
+let popovers: Array<Popover> = [popover_0, popover_1, popover_2];
 
 
 // ----------------------------------------------------------------------------

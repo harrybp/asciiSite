@@ -38,7 +38,6 @@ class Tab {
         let rendered_line: Array<Token> = [];
         let rendered: Array<Array<Token>> = [];
         let rendered_desc: Array<Array<Token>> = this.description.render(width - 5);
-        console.log(rendered_desc.length);
 
         // Description line
         for(var i = 0; i < rendered_desc.length; i++){

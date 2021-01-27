@@ -5,7 +5,6 @@ class Navbar {
     page_links: Array<string>;
     brand: Block;
     dark_brand: Block;
-    centered: boolean;
 
     // Dimensions (given in characters)
     start_brand_index: number; // Spacing before the brand
@@ -13,13 +12,13 @@ class Navbar {
     spacing: number; // Spacing between subsequent links
     mobile_spacing: number; // Spacing between brand and hamburger
     mobile_cutoff: number;
+    right_spacing: number;
 
     constructor(brand: Block, page_names: Array<string>, page_links: Array<string>, dark_brand: Block = brand){
         this.brand = brand;
         this.dark_brand = dark_brand;
         this.page_names = page_names;
         this.page_links = page_links;
-        this.centered = true;
     }
 
     // ------------------------------------------------------------------------
@@ -70,6 +69,8 @@ class Navbar {
             }
             if(i != (this.page_names.length - 1)){
                 rendered_line.push(new Space(this.spacing - 1));
+            } else {
+                rendered_line.push(new Space(this.right_spacing));
             }
         }
         return rendered_line;
@@ -86,6 +87,8 @@ class Navbar {
         rendered_line.push(new Word("["));
         rendered_line.push(new Word("X", false, false, true, "#", "open_popover(" + selected_page + ")"));
         rendered_line.push(new Word("]"));
+        rendered_line.push(new Space(this.right_spacing));
+
         return rendered_line;
     }
 
@@ -97,18 +100,12 @@ class Navbar {
         let brand_length: number = get_token_array_length(brand);
 
         // Calculate the spacing between the navbar elements
-        if(this.centered){
-            this.start_brand_index = left_padding + 3;
-            let side_padding: number = this.start_brand_index * 2;
-            this.initial_spacing = Math.floor((page_width - side_padding - link_length) * 0.6);
-            this.spacing = Math.floor((page_width - side_padding - link_length - brand_length - this.initial_spacing) / (this.page_names.length - 1));
-            this.mobile_cutoff = link_length + brand_length + (2 * this.start_brand_index) + this.initial_spacing + this.page_names.length;
-        } else {
-            this.start_brand_index = Math.floor(page_width / 10) + 1;
-            this.initial_spacing = page_width - link_length - brand_length - ((links.length + 1) * this.start_brand_index);
-            this.spacing = this.start_brand_index + 1;
-            this.mobile_cutoff = link_length + brand_length + (4 * this.start_brand_index);
-        }
+        this.start_brand_index = left_padding + 3;
+        let side_padding: number = this.start_brand_index * 2;
+        this.initial_spacing = Math.floor((page_width - side_padding - link_length) * 0.6);
+        this.spacing = Math.floor((page_width - side_padding - link_length - brand_length - this.initial_spacing) / (this.page_names.length - 1));
+        this.mobile_cutoff = link_length + brand_length + (2 * this.start_brand_index) + this.initial_spacing + this.page_names.length;
+        this.right_spacing = page_width - this.start_brand_index - brand_length - this.initial_spacing - link_length - ((this.page_names.length - 1) * this.spacing) + 3;
         this.mobile_spacing = page_width  - (2 * this.start_brand_index) - brand_length;
     }
 }

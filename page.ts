@@ -42,7 +42,7 @@ class Page {
         rendered_line = [];
         rendered_line.push(new Space(left_padding + 1));
         rendered_line.push(new Space(content_width - 2, "&#175;"));
-        rendered_line.push(new Space(right_padding + 1));
+        rendered_line.push(new Space(right_padding + 2));
         rendered.push(rendered_line);
 
         return rendered;

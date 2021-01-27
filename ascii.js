@@ -370,7 +370,7 @@ var Popover = (function () {
                             }
                             break;
                         case 1:
-                            var result_1 = this.stage_1(token, line_so_far, left_offset, popover_rendered[i], (i == 3) || (i == 0));
+                            var result_1 = this.stage_1(token, line_so_far, left_offset, popover_rendered[i], (i == popover_rendered.length - 1) || (i == 0));
                             stage = result_1.next_stage;
                             new_line = new_line.concat(result_1.output);
                             if (stage == 1) {

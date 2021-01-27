@@ -64,7 +64,6 @@ class Popover {
             let popover_bottom: Array<Token> = [];
             popover_bottom.push(new Space(this.width + 1, "&#175;"))
             popover_rendered.push(popover_bottom);
-            //console.log("RLO: " + relative_left_offset + ", LO: " + left_offset + ", RO: " + right_offset + "P: " + indexes[2] + ", T: " + trigger_length);
 
             // 4 stages per line:
             // 0: waiting for popover left_index, print the tokens as normal
@@ -90,7 +89,6 @@ class Popover {
 
                         // Case 0 : before we reach start of the popover
                         case 0:
-                            //console.log("Case 0: " + token.render());
                             let result_0: Stage_Result = this.stage_0(token, line_so_far, left_offset);
                             stage = result_0.next_stage;
                             new_line = new_line.concat(result_0.output);
@@ -101,8 +99,7 @@ class Popover {
 
                         // Case 1 : when we reach the start of the popover
                         case 1:
-                            //console.log("Case 1: " + token.render());
-                            let result_1: Stage_Result = this.stage_1(token, line_so_far, left_offset, popover_rendered[i], (i==3) || (i ==0));
+                            let result_1: Stage_Result = this.stage_1(token, line_so_far, left_offset, popover_rendered[i], (i==popover_rendered.length - 1) || (i ==0));
                             stage = result_1.next_stage;
                             new_line = new_line.concat(result_1.output);
                             if(stage == 1){
@@ -112,7 +109,6 @@ class Popover {
 
                         // Case 2 : waiting for the end of the popover
                         case 2:
-                            //console.log("Case 2: " + token.render());
                             let result_2: Stage_Result = this.stage_2(token, line_so_far, right_offset);
                             stage = result_2.next_stage;
                             new_line = new_line.concat(result_2.output);
@@ -121,7 +117,6 @@ class Popover {
 
                         // Case 3 : after passing the end of the popover
                         case 3:
-                            //console.log("Case 3: " + token.render());
                             new_line.push(token);
                             j++;
                             break;
@@ -172,7 +167,6 @@ class Popover {
         let token_length: number = token_in.length();
         let difference: number = line_length + token_length - left_index;
         let new_token_length: number = token_length - difference;
-        //console.log(token_in.render() + " - T: " + token_length + ", L: " + line_length + ", NT: " + new_token_length);
 
         // Shorten the token
         if(token_in instanceof Space){
@@ -209,12 +203,10 @@ class Popover {
         // Get the lengths
         let line_length: number = get_token_array_length(line);
         let token_length: number = token_in.length();
-        //console.log(token_in.render() + " - T: " + token_length + ", L: " + line_length + ", R: " + right_index);
 
         // If we have passed the end of the popover contents, trim the token, else do nothing
         if(line_length + token_length > right_index){
             let new_token_length: number = line_length + token_length - right_index;
-            //console.log(token_in.render() + " - T: " + token_length + ", L: " + line_length + ", NT: " + new_token_length);
 
             // Shorten the token
             if(token_in instanceof Space){

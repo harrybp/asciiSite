@@ -20,6 +20,9 @@ class Word implements Token {
     no_link_end: boolean;
     no_link_begin: boolean;
 
+    // For tracking words which have been split
+    no_space_end: boolean;
+
     constructor(text: string, bold: boolean = false, italic: boolean = false,
                 linked: boolean = false, link_href: string = "", link_onclick: string = "",
                 new_line: boolean = false){
@@ -32,6 +35,7 @@ class Word implements Token {
         this.new_line = new_line;
         this.no_link_end = false;
         this.no_link_begin = false;
+        this.no_space_end = false;
     }
 
     // ------------------------------------------------------------------------

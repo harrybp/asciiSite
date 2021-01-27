@@ -17,12 +17,42 @@ class Block {
 
     // Wrap the words to  a set length
     wrap(width: number): Block_Data {
-        // Providing a width of zero will do no wrapping
+        // Providing a width of -1 will do no wrapping
+        if(width < 0){
+            width = 999999;
+        }
 
         let lines: Array<Array<Word>> = [];
         let line_lengths: Array<number> = [];
         let current_line: Array<Word> = [];
         let current_line_length = 0;
+
+        // Do a first pass to split up any too-long words
+        let too_long: boolean = true;
+        while(too_long){
+            too_long = false;
+            let new_contents: Array<Word> = [];
+            for(const word of this.contents){
+                if(word.length() <= width){
+                    new_contents.push(word);
+                } else {
+                    let half_way: number = Math.floor(word.length() / 2);
+                    let first_half: Word = new Word(word.text.substr(0, half_way), word.bold, word.italic,
+                                                    word.linked, word.link_href, word.link_onclick);
+                    let second_half: Word = new Word(word.text.substr(half_way, word.length()), word.bold,
+                                                     word.italic, word.linked, word.link_href, word.link_onclick);
+                    first_half.no_space_end = true;
+                    second_half.no_space_end = word.no_space_end;
+                    new_contents.push(first_half);
+                    new_contents.push(second_half);
+                    too_long = true;
+                }
+            }
+            if(too_long){
+                this.contents = new_contents;
+            }
+        }
+
         for(const word of this.contents){
 
             // If this word fits on the current line
@@ -73,18 +103,18 @@ class Block {
 
             // For each word in the line
             for(var j = 0; j < line.length; j++){
-                let word: Token = line[j];
+                let word: Word = line[j];
 
                 // Clear any previous settings of link wrapping
-                if(word instanceof Word){
-                    let word_cast: Word = <Word>word;
-                    word_cast.no_link_end = false;
-                    word_cast.no_link_begin = false;
-                    word = word_cast;
-                }
+                //if(word instanceof Word){
+                //    let word_cast: Word = <Word>word;
+                    word.no_link_end = false;
+                    word.no_link_begin = false;
+                    //word = word_cast;
+                //}
 
                 current_line.push(word);
-                if(word != line[line.length - 1]){
+                if((word != line[line.length - 1]) && (!word.no_space_end)){
                     current_line.push(new Space(1));
                 }
             }

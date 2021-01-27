@@ -64,7 +64,7 @@ class Navbar {
                 rendered_line.push(new Word("]"));
             } else {
                 rendered_line.push(new Space(1));
-                rendered_line.push(new Word(this.page_names[i], false, false, true, "#", "switch_page(" + i + ")"));
+                rendered_line.push(new Word(this.page_names[i], false, false, true, "#", "site.switch_page(" + i + ")"));
                 rendered_line.push(new Space(1));
             }
             if(i != (this.page_names.length - 1)){
@@ -85,7 +85,7 @@ class Navbar {
         rendered_line = rendered_line.concat(brand);
         rendered_line.push(new Space(this.mobile_spacing - 1));
         rendered_line.push(new Word("["));
-        rendered_line.push(new Word("X", false, false, true, "#", "open_popover(" + selected_page + ")"));
+        rendered_line.push(new Word("X", false, false, true, "#", "site.open_popover(" + selected_page + ")"));
         rendered_line.push(new Word("]"));
         rendered_line.push(new Space(this.right_spacing));
 

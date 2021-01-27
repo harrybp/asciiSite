@@ -95,7 +95,7 @@ class Page {
                 line_3.push(new Space(tab.title.length + 3));
             } else {
                 line_2.push(new Space(1));
-                line_2.push(new Word(tab.title, false, false, true, "#", "switch_tab(" + index + ")"));
+                line_2.push(new Word(tab.title, false, false, true, "#", "site.switch_tab(" + index + ")"));
                 line_2.push(new Space(1));
                 line_2.push(new Word("|"));
                 line_3.push(new Space(tab.title.length + 3, "&#175;"));

@@ -1,288 +1,53 @@
-var Block = (function () {
-    function Block(text) {
-        this.contents = text;
+function build_website(data) {
+    var pages = [];
+    var page_names = [];
+    var links = [];
+    var popovers = [];
+    for (var _i = 0, _a = data.pages; _i < _a.length; _i++) {
+        var page = _a[_i];
+        var tabs = [];
+        for (var _b = 0, _c = page.tabs; _b < _c.length; _b++) {
+            var tab = _c[_b];
+            var tab_desc = new Block(tokenize(tab.description));
+            var tab_content = new Block(tokenize(tab.contents));
+            var new_tab = new Tab(tab.title, tab_desc, tab_content);
+            tabs.push(new_tab);
+        }
+        var new_page_title = new Block(tokenize(page.title));
+        var new_page = new Page(new_page_title, "", tabs);
+        pages.push(new_page);
+        page_names.push(page.title);
+        links.push("");
     }
-    Block.prototype.wrap = function (width) {
-        var lines = [];
-        var line_lengths = [];
-        var current_line = [];
-        var current_line_length = 0;
-        for (var _i = 0, _a = this.contents; _i < _a.length; _i++) {
-            var word = _a[_i];
-            if (!word.new_line && (word.text.length + current_line_length < width)) {
-                current_line.push(word);
-                current_line_length += word.text.length + 1;
+    for (var i = 0; i < data.pages.length; i++) {
+        var longest_length = 0;
+        var popover_string = "";
+        for (var j = 0; j < data.pages.length; j++) {
+            if (data.pages[j].title.length > longest_length) {
+                longest_length = data.pages[j].title.length;
+            }
+            if (i == j) {
+                popover_string += data.pages[j].title;
             }
             else {
-                lines.push(current_line);
-                if (current_line_length > 0) {
-                    line_lengths.push(current_line_length - 1);
-                }
-                else {
-                    line_lengths.push(current_line_length);
-                }
-                current_line = [];
-                if (word.new_line) {
-                    current_line_length = 0;
-                }
-                else {
-                    current_line.push(word);
-                    current_line_length = word.text.length + 1;
-                }
+                popover_string += "<a href='#' onclick='site.switch_page(" + j + ")'>";
+                popover_string += data.pages[j].title;
+                popover_string += "</a>";
+            }
+            if (j != data.pages.length - 1) {
+                popover_string += "<br>";
             }
         }
-        if (current_line.length > 0) {
-            lines.push(current_line);
-            line_lengths.push(current_line_length - 1);
-        }
-        return { lines: lines, lengths: line_lengths };
-    };
-    Block.prototype.render = function (width) {
-        var data = this.wrap(width);
-        var html_lines = [];
-        var current_line;
-        for (var i = 0; i < data.lines.length; i++) {
-            var line = data.lines[i];
-            current_line = "";
-            for (var _i = 0, line_1 = line; _i < line_1.length; _i++) {
-                var word = line_1[_i];
-                current_line += word.render();
-                if (word != line[line.length - 1]) {
-                    current_line += " ";
-                }
-            }
-            current_line += Array(width - data.lengths[i]).join(" ");
-            html_lines.push(current_line);
-        }
-        return html_lines;
-    };
-    return Block;
-}());
-var Popover = (function () {
-    function Popover(id_number, content) {
-        this.id_number = id_number;
-        this.content = content;
-        this.active = false;
-        this.width = 8;
+        var popover_content = new Block(tokenize(popover_string));
+        var new_popover = new Popover(i, popover_content, longest_length);
+        popovers.push(new_popover);
     }
-    Popover.prototype.render = function (page_contents, width) {
-        if (this.active) {
-            var popover_html = this.content.render(this.width);
-            var search_string = "open_popover(" + this.id_number + ")";
-            for (var i = 0; i < page_contents.length; i++) {
-                var line = page_contents[i];
-                var index = line.indexOf(search_string);
-                if (index >= 0) {
-                    page_contents[i] = "poop";
-                }
-            }
-        }
-        return page_contents;
-    };
-    return Popover;
-}());
-var Tab = (function () {
-    function Tab(title, description, content) {
-        this.title = title;
-        this.description = description;
-        this.content = content;
-    }
-    Tab.prototype.render = function (width, left_padding, right_padding) {
-        var lines = this.content.render(width - 3);
-        var html = this.render_description(width, left_padding, right_padding);
-        for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
-            var line = lines_1[_i];
-            var html_string = Array(left_padding + 1).join(" ") + "| ";
-            html_string += line + " |";
-            html_string += Array(right_padding + 1).join(" ");
-            html.push(html_string);
-        }
-        return html;
-    };
-    Tab.prototype.render_description = function (width, left_padding, right_padding) {
-        var html_string = "";
-        var html = [];
-        var desc_padding = width - this.description.length;
-        html_string += Array(left_padding + 1).join(" ") + "| ";
-        html_string += " > " + this.description + Array(desc_padding + 1 - 4 - 3).join(" ") + " |";
-        html_string += Array(right_padding + 1).join(" ");
-        html.push(html_string);
-        html_string = Array(left_padding + 1).join(" ") + "| ";
-        html_string += Array(width + 1 - 4).join(" ") + " |";
-        html_string += Array(right_padding + 1).join(" ");
-        html.push(html_string);
-        return html;
-    };
-    return Tab;
-}());
-var Page = (function () {
-    function Page(title, url, tabs) {
-        this.title = title;
-        this.url = url;
-        this.tabs = tabs;
-        this.selected_tab = 0;
-    }
-    Page.prototype.render = function (page_width, content_width, left_padding, right_padding) {
-        var html = [];
-        html.push(Array(page_width + 1).join(" "));
-        html = html.concat(this.render_title(page_width, left_padding));
-        html = html.concat(this.render_tab_selector(page_width, left_padding, content_width));
-        html = html.concat(this.tabs[this.selected_tab].render(content_width, left_padding, right_padding));
-        html = html.concat(this.render_bottom(left_padding, content_width, right_padding));
-        return html;
-    };
-    Page.prototype.render_bottom = function (left_padding, content_width, right_padding) {
-        var html_string = Array(left_padding + 1).join(" ") + "|";
-        html_string += Array(content_width - 1).join(" ") + "|";
-        html_string += Array(right_padding + 1).join(" ") + "\n";
-        html_string += Array(left_padding + 1).join(" ") + " ";
-        html_string += Array(content_width - 1).join("&#175;") + " ";
-        html_string += Array(right_padding + 1).join(" ");
-        return [html_string];
-    };
-    Page.prototype.render_title = function (width, left_padding) {
-        var html_string = Array(left_padding + 2).join(" ");
-        html_string += this.title;
-        html_string += Array(width - left_padding - this.title.length).join(" ");
-        return [html_string];
-    };
-    Page.prototype.render_tab_selector = function (width, left_padding, content_width) {
-        var line_1 = Array(left_padding + 4).join(" ");
-        var line_2 = Array(left_padding + 3).join(" ") + "|";
-        var line_2_length = line_2.length;
-        var line_3 = Array(left_padding + 1).join(" ") + "|@";
-        var index = 0;
-        for (var _i = 0, _a = this.tabs; _i < _a.length; _i++) {
-            var tab = _a[_i];
-            line_1 += Array(tab.title.length + 3).join("_") + " ";
-            line_2_length += tab.title.length;
-            if (index == this.selected_tab) {
-                line_2 += " " + tab.title + " |";
-                line_3 += Array(tab.title.length + 4).join(" ");
-            }
-            else {
-                line_2 += " <a href='#' onclick='switch_tab(" + index + ")'>" + tab.title + "</a> |";
-                line_3 += Array(tab.title.length + 4).join("@");
-            }
-            index++;
-        }
-        line_1 += Array(width - line_1.length + 1).join(" ");
-        line_2 += Array(width - line_2_length).join(" ");
-        line_3 += Array(content_width + left_padding - line_3.length).join("@") + "|";
-        line_3 += Array(width - line_3.length + 1).join(" ");
-        line_3 = line_3.replace(/@/g, "&#175;");
-        if (this.tabs.length == 0) {
-            line_2 = "";
-        }
-        return [line_1, line_2, line_3];
-    };
-    return Page;
-}());
-var Navbar = (function () {
-    function Navbar(brand, page_names, page_links) {
-        this.brand = brand;
-        this.page_names = page_names;
-        this.page_links = page_links;
-        this.centered = true;
-    }
-    Navbar.prototype.render = function (width, left_padding, selected_page) {
-        this.update_dimensions(width, left_padding);
-        var html = [];
-        html.push(Array(width + 1).join(" "));
-        html = html.concat((this.mobile_cutoff < width) ? this.render_desktop_line(selected_page) : this.render_mobile_line());
-        html.push(Array(width + 1).join("_"));
-        return html;
-    };
-    Navbar.prototype.render_desktop_line = function (selected_page) {
-        var html_string = Array(this.start_brand_index).join(" ");
-        html_string += this.brand;
-        html_string += Array(this.initial_spacing).join(" ");
-        for (var i = 0; i < this.page_names.length; i++) {
-            if (i == selected_page) {
-                html_string += "[" + this.page_names[i] + "]";
-            }
-            else {
-                html_string += " <a href='#' onclick='switch_page(" + i + ")'>" + this.page_names[i] + "</a> ";
-            }
-            if (i != (this.page_names.length - 1)) {
-                html_string += Array(this.spacing).join(" ");
-            }
-        }
-        return [html_string];
-    };
-    Navbar.prototype.render_mobile_line = function () {
-        var html_string = Array(this.start_brand_index).join(" ");
-        html_string += this.brand;
-        html_string += Array(this.mobile_spacing).join(" ");
-        html_string += '[<a href="#" onclick=openPopover("nav")>X</a>]';
-        return [html_string];
-    };
-    Navbar.prototype.update_dimensions = function (page_width, left_padding) {
-        var link_length = this.page_names.reduce(function (x, y) { return x + y; }).length + 4;
-        if (this.centered) {
-            this.start_brand_index = left_padding + 2;
-            var side_padding = this.start_brand_index * 2;
-            this.initial_spacing = Math.floor((page_width - side_padding - link_length) * 0.6);
-            this.spacing = Math.floor((page_width - side_padding - link_length - this.brand.length - this.initial_spacing) / (this.page_names.length - 1));
-            this.mobile_cutoff = link_length + this.brand.length + (2 * this.start_brand_index) + this.initial_spacing + this.page_names.length;
-        }
-        else {
-            this.start_brand_index = Math.floor(page_width / 10);
-            this.initial_spacing = page_width - link_length - this.brand.length - ((links.length + 1) * this.start_brand_index);
-            this.spacing = this.start_brand_index + 1;
-            this.mobile_cutoff = link_length + this.brand.length + (4 * this.start_brand_index);
-        }
-        this.mobile_spacing = page_width - 2 - (2 * this.start_brand_index) - this.brand.length;
-    };
-    return Navbar;
-}());
-var Website = (function () {
-    function Website(content_width, navbar, pages) {
-        this.navbar = navbar;
-        this.target_content_pixel_width = content_width;
-        this.selected_page = 0;
-        this.pages = pages;
-    }
-    Website.prototype.render = function (popovers) {
-        this.update_dimensions();
-        var new_html = this.navbar.render(this.page_width, this.left_padding, this.selected_page);
-        new_html = new_html.concat(this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding));
-        for (var _i = 0, popovers_1 = popovers; _i < popovers_1.length; _i++) {
-            var popover_1 = popovers_1[_i];
-            new_html = popover_1.render(new_html, this.page_width);
-        }
-        return new_html.join("\n");
-    };
-    Website.prototype.update_dimensions = function () {
-        var pixel_width = this.get_page_width();
-        var char_pixel_width = this.get_character_width();
-        this.page_width = Math.floor(pixel_width / char_pixel_width);
-        var min_line_chars = 50;
-        if ((pixel_width > this.target_content_pixel_width) && (this.page_width > min_line_chars)) {
-            this.content_width = Math.floor(this.target_content_pixel_width / char_pixel_width);
-            this.left_padding = Math.floor((this.page_width - this.content_width) / 2);
-            this.right_padding = this.page_width - this.content_width - this.left_padding;
-        }
-        else {
-            this.left_padding = 1;
-            this.right_padding = 1;
-            this.content_width = Math.floor(pixel_width / char_pixel_width) - 2;
-        }
-    };
-    Website.prototype.get_page_width = function () {
-        return Math.min(document.body.clientWidth, document.body.scrollWidth);
-    };
-    Website.prototype.get_character_width = function () {
-        var sizing_span = document.createElement("span");
-        sizing_span.innerHTML = '--------------------';
-        sizing_span.style.cssText += 'position: absolute; top: -100px; padding: 0px;';
-        document.body.insertBefore(sizing_span, document.body.firstChild);
-        var width = sizing_span.clientWidth / 20;
-        sizing_span.parentNode.removeChild(sizing_span);
-        return width;
-    };
-    return Website;
-}());
+    var nav_light_title = new Block(tokenize(data.title_light));
+    var nav_dark_title = new Block(tokenize(data.title_dark));
+    var nav = new Navbar(nav_light_title, page_names, links, nav_dark_title);
+    var site = new Website(700, nav, pages, popovers);
+    return site;
+}
 var Word = (function () {
     function Word(text, bold, italic, linked, link_href, link_onclick, new_line) {
         if (bold === void 0) { bold = false; }
@@ -298,7 +63,13 @@ var Word = (function () {
         this.link_href = link_href;
         this.link_onclick = link_onclick;
         this.new_line = new_line;
+        this.no_link_end = false;
+        this.no_link_begin = false;
+        this.no_space_end = false;
     }
+    Word.prototype.length = function () {
+        return this.text.length;
+    };
     Word.prototype.render = function () {
         var value = this.text;
         if (this.bold) {
@@ -308,12 +79,51 @@ var Word = (function () {
             value = "<i>" + value + "</i>";
         }
         if (this.linked) {
-            value = "<a href='" + this.link_href + "' onclick='" + this.link_onclick + "'>" + value + "</a>";
+            var new_value = "";
+            if (!this.no_link_begin) {
+                new_value += "<a ";
+                if (this.link_href.length > 0) {
+                    new_value += "href='" + this.link_href + "' ";
+                }
+                if (this.link_onclick.length > 0) {
+                    new_value += "onclick='" + this.link_onclick + "' ";
+                }
+                new_value += ">";
+            }
+            new_value += value;
+            if (!this.no_link_end) {
+                new_value += "</a>";
+            }
+            value = new_value;
         }
         return value;
     };
     return Word;
 }());
+var Space = (function () {
+    function Space(space_length, space_value) {
+        if (space_value === void 0) { space_value = " "; }
+        this.space_length = space_length;
+        this.space_value = space_value;
+    }
+    Space.prototype.length = function () {
+        return this.space_length;
+    };
+    Space.prototype.render = function () {
+        if (this.space_length < 0)
+            console.log("Space of length: " + this.space_length);
+        return Array(this.space_length + 1).join(this.space_value);
+    };
+    return Space;
+}());
+function get_token_array_length(tokens) {
+    var total_length = 0;
+    for (var _i = 0, tokens_1 = tokens; _i < tokens_1.length; _i++) {
+        var token = tokens_1[_i];
+        total_length += token.length();
+    }
+    return total_length;
+}
 function pad_tags(text) {
     text = text.replace(/<\/?(b|i|br)>/g, function (x) { return (" " + x + " "); });
     text = text.replace(/<a.*?>/g, function (x) { return (" " + x + " "); });
@@ -387,56 +197,631 @@ function tokenize(text) {
     }
     return words;
 }
-var games_string = "Various Games made by <br>me over the last few years in my spare time. All were made completely from scratch either in pure HTML5 with <a href='#' onclick='open_popover(0)'>javascript</a> and the canvas or in C++ and compiled to web assembly. All should run in the browser. Only a couple of them work with mobile devices.<br><br><b>Cave Escape (2019 - Present)</b><br> Avoid the monsters and try to escape the vast cave system. Collect as many coins as possible. Created in C++ and compiled to web-assembly using emscripten. Still a work in progress.<br> <a href='games/cave_escape.html'>Click</a> to play<br><br><b>Ocean Simulator (2018)</b><br> Play with fishes and fish-eating worms in this fun little sandbox. This is an implementation of boids written in javascript.<br> <a href='games/ocean_simulator.html'>Click</a> to play<br><br><b>Bounce (2018)</b><br> Sort of like 2D single-player pong? Keep the ball from escaping! Created in javascript - works on mobile.<br> <a href='games/bounce.html'>Click</a> to play<br><br><b>Zombie Run (2017)</b><br> A side scrolling run-and-shoot type game with randomly generated caves. See how far you can get! Created in javascript - works on mobile.<br> <a href='games/zombie_run.html'>Click</a> to play<br><br><b>Meteor Shower (2017)</b><br> Dodge falling blocks and collect health cubes as you try to survive for as long as possible. Created in javascript.<br> <a href='games/meteor_shower.html'>Click</a> to play<br><br><b>Endless Climb (2017)</b><br> Race against time as you jump upwards from block to block in this fun little concept game. Created in javascript.<br> <a href='games/endless_climb.html'>Click</a> to play<br><br>Check my <a href='https://github.com/harrybp'>github</a> for more stuff";
-var other_string = "<b>Texture Generation using ML (2018)</b><br> Created as part of my final year project at uni, a demonstration of a few methods of synthesising unique textures using machine learning methods. <br> See the <a href='https://harrybp.github.io/texture_generation_demo/'>demo</a> or check it out on <a href='https://github.com/harrybp/TextureGeneration'>github</a><br><br><b>This website (2017 - Present)</b><br> A text-only interactive website built using javascript with support for a navbar, tabs, pop-ups, pop-overs and columns of text. Hint: try clicking the cat face in the nav bar! <br> Check it out on <a href='https://github.com/harrybp/asciiSite'>github</a>";
-var info_string = "Hi I'm Harry!<br><br>This website serves as an archive for all of the web projects I have worked on over the years. The stuff on here is all for fun - I have been trying to learn game development so a lot of the projects are little games. Feel free to check them out and contact me with any feedback.";
-var contact_string = "";
-var page0_tab0_content = new Block(tokenize(games_string));
-var page0_tab0 = new Tab("Games", "Game Projects", page0_tab0_content);
-var page0_tab1_content = new Block(tokenize(other_string));
-var page0_tab1 = new Tab("Other", "Other Projects", page0_tab1_content);
-var page0_tabs = [page0_tab0, page0_tab1];
-var page0 = new Page("Projects", "projects.html", page0_tabs);
-var page1_tab0_content = new Block(tokenize(info_string));
-var page1_tab0 = new Tab("Info", "Site Information", page1_tab0_content);
-var page1_tab1_content = new Block(tokenize(contact_string));
-var page1_tab1 = new Tab("Contact", "Contact Information", page1_tab1_content);
-var page1_tabs = [page1_tab0, page1_tab1];
-var page1 = new Page("About Me", "about.html", page1_tabs);
-var page_names = ["Projects", "About Me"];
-var links = ["projects.html", "about.html"];
-var nav = new Navbar("harrycats", page_names, links);
-var pages = [page0, page1];
-var site = new Website(700, nav, pages);
-var popover_string = "Projects<br>About Me";
-var popover_content = new Block(tokenize(popover_string));
-var popover = new Popover(0, popover_content);
-var popovers = [popover];
-function reload() {
-    var new_html = site.render(popovers);
-    document.body.innerHTML = new_html;
-}
-function switch_tab(tab_index) {
-    pages[site.selected_page].selected_tab = tab_index;
-    console.log("Selected tab: " + tab_index);
-    reload();
-}
-function switch_page(page_index) {
-    site.selected_page = page_index;
-    console.log("Selected page: " + page_index);
-    reload();
-}
-function open_popover(id_number) {
-    console.log("Opening " + id_number);
-    for (var i = 0; i < popovers.length; i++) {
-        if (i == id_number) {
-            popover.active = true;
+var Block = (function () {
+    function Block(text) {
+        this.contents = text;
+    }
+    Block.prototype.wrap = function (width) {
+        if (width < 0) {
+            width = 999999;
+        }
+        var lines = [];
+        var line_lengths = [];
+        var current_line = [];
+        var current_line_length = 0;
+        var too_long = true;
+        while (too_long) {
+            too_long = false;
+            var new_contents = [];
+            for (var _i = 0, _a = this.contents; _i < _a.length; _i++) {
+                var word = _a[_i];
+                if (word.length() <= width) {
+                    new_contents.push(word);
+                }
+                else {
+                    var half_way = Math.floor(word.length() / 2);
+                    var first_half = new Word(word.text.substr(0, half_way), word.bold, word.italic, word.linked, word.link_href, word.link_onclick);
+                    var second_half = new Word(word.text.substr(half_way, word.length()), word.bold, word.italic, word.linked, word.link_href, word.link_onclick);
+                    first_half.no_space_end = true;
+                    second_half.no_space_end = word.no_space_end;
+                    new_contents.push(first_half);
+                    new_contents.push(second_half);
+                    too_long = true;
+                }
+            }
+            if (too_long) {
+                this.contents = new_contents;
+            }
+        }
+        for (var _b = 0, _c = this.contents; _b < _c.length; _b++) {
+            var word = _c[_b];
+            if ((width < 0) || (!word.new_line && (word.text.length + current_line_length < width))) {
+                current_line.push(word);
+                current_line_length += word.text.length + 1;
+            }
+            else {
+                lines.push(current_line);
+                if (current_line_length > 0) {
+                    line_lengths.push(current_line_length - 1);
+                }
+                else {
+                    line_lengths.push(current_line_length);
+                }
+                current_line = [];
+                if (word.new_line) {
+                    current_line_length = 0;
+                }
+                else {
+                    current_line.push(word);
+                    current_line_length = word.text.length + 1;
+                }
+            }
+        }
+        if (current_line.length > 0) {
+            lines.push(current_line);
+            line_lengths.push(current_line_length - 1);
+        }
+        return { lines: lines, lengths: line_lengths };
+    };
+    Block.prototype.render = function (width) {
+        var data = this.wrap(width);
+        var rendered_lines = [];
+        var current_line;
+        for (var i = 0; i < data.lines.length; i++) {
+            var line = data.lines[i];
+            current_line = [];
+            for (var j = 0; j < line.length; j++) {
+                var word = line[j];
+                word.no_link_end = false;
+                word.no_link_begin = false;
+                current_line.push(word);
+                if ((word != line[line.length - 1]) && (!word.no_space_end)) {
+                    current_line.push(new Space(1));
+                }
+            }
+            if (width > 0) {
+                current_line.push(new Space(width - data.lengths[i] - 1));
+            }
+            rendered_lines.push(current_line);
+        }
+        var previous_link;
+        var previous_link_valid = false;
+        var previous_link_index = 0;
+        for (var i = 0; i < rendered_lines.length; i++) {
+            previous_link_valid = false;
+            for (var j = 0; j < rendered_lines[i].length; j++) {
+                if (rendered_lines[i][j] instanceof Word) {
+                    var this_word = rendered_lines[i][j];
+                    if (this_word.linked) {
+                        if (previous_link_valid && (previous_link.link_href == this_word.link_href) &&
+                            (previous_link.link_onclick == this_word.link_onclick)) {
+                            previous_link.no_link_end = true;
+                            this_word.no_link_begin = true;
+                        }
+                        previous_link = this_word;
+                        previous_link_valid = true;
+                        previous_link_index = j;
+                    }
+                    else {
+                        previous_link_valid = false;
+                    }
+                }
+            }
+        }
+        return rendered_lines;
+    };
+    return Block;
+}());
+var Popover = (function () {
+    function Popover(id_number, content, width) {
+        this.id_number = id_number;
+        this.content = content;
+        this.active = false;
+        this.width = width + 1;
+    }
+    Popover.prototype.render = function (page_contents, width) {
+        if (this.active) {
+            var new_lines = [];
+            var indexes = this.get_trigger_index(page_contents);
+            var line_index = indexes[0];
+            var token_index = indexes[1];
+            var pre_trigger_length = indexes[2];
+            var trigger = page_contents[line_index][token_index];
+            var trigger_length = trigger.length();
+            var relative_left_offset = Math.floor((this.width + 4 - page_contents[line_index][token_index].length()) / 2);
+            var left_offset = get_token_array_length(page_contents[line_index].slice(0, token_index)) - relative_left_offset;
+            var right_offset = left_offset + this.width + 3;
+            if (left_offset < 1) {
+                var difference = 1 - left_offset;
+                left_offset += difference;
+                right_offset += difference;
+            }
+            if (right_offset > (width - 1)) {
+                var difference = right_offset - (width - 1);
+                right_offset -= difference;
+                left_offset -= difference;
+            }
+            var popover_rendered = [];
+            var popover_top = [];
+            popover_top.push(new Space(pre_trigger_length - 1 - left_offset - 1, "_"));
+            popover_top.push(new Word("[" + trigger.text + "]", trigger.bold, trigger.italic, trigger.linked, trigger.link_href, "site.close_popover(" + this.id_number + ")"));
+            popover_top.push(new Space(right_offset - pre_trigger_length - trigger_length - 2, "_"));
+            popover_rendered.push(popover_top);
+            popover_rendered = popover_rendered.concat(this.content.render(this.width));
+            var popover_bottom = [];
+            popover_bottom.push(new Space(this.width + 1, "&#175;"));
+            popover_rendered.push(popover_bottom);
+            for (var i = 0; i < popover_rendered.length; i++) {
+                var stage = 0;
+                var index = line_index + i;
+                var this_line = page_contents[index];
+                var new_line = [];
+                var j_1 = 0;
+                while (j_1 < this_line.length) {
+                    var token = this_line[j_1];
+                    var line_so_far = this_line.slice(0, j_1);
+                    switch (stage) {
+                        case 0:
+                            var result_0 = this.stage_0(token, line_so_far, left_offset);
+                            stage = result_0.next_stage;
+                            new_line = new_line.concat(result_0.output);
+                            if (stage == 0) {
+                                j_1++;
+                            }
+                            break;
+                        case 1:
+                            var result_1 = this.stage_1(token, line_so_far, left_offset, popover_rendered[i], (i == 3) || (i == 0));
+                            stage = result_1.next_stage;
+                            new_line = new_line.concat(result_1.output);
+                            if (stage == 1) {
+                                j_1++;
+                            }
+                            break;
+                        case 2:
+                            var result_2 = this.stage_2(token, line_so_far, right_offset);
+                            stage = result_2.next_stage;
+                            new_line = new_line.concat(result_2.output);
+                            j_1++;
+                            break;
+                        case 3:
+                            new_line.push(token);
+                            j_1++;
+                            break;
+                    }
+                }
+                new_lines.push(new_line);
+            }
+            for (var j = 0; j < new_lines.length; j++) {
+                var index = j + line_index;
+                page_contents[index] = new_lines[j];
+            }
+        }
+        return page_contents;
+    };
+    Popover.prototype.stage_0 = function (token_in, line, left_offset) {
+        var token_out;
+        var new_stage;
+        var line_length = get_token_array_length(line);
+        var token_length = token_in.length();
+        var still_space = (line_length + token_length) < left_offset;
+        if (still_space) {
+            token_out = token_in;
+            new_stage = 0;
         }
         else {
-            popover.active = false;
+            token_out = new Space(0);
+            new_stage = 1;
         }
+        return { output: [token_out], next_stage: new_stage };
+    };
+    Popover.prototype.stage_1 = function (token_in, line, left_index, popover_content, no_border) {
+        var tokens_out = [];
+        var line_length = get_token_array_length(line);
+        var token_length = token_in.length();
+        var difference = line_length + token_length - left_index;
+        var new_token_length = token_length - difference;
+        if (token_in instanceof Space) {
+            var old_space = token_in;
+            var trimmed_space = new Space(new_token_length, token_in.space_value);
+            tokens_out.push(trimmed_space);
+        }
+        else {
+            var old_word = token_in;
+            var trimmed_word = new Word(old_word.text.substr(0, new_token_length), old_word.bold, old_word.italic, old_word.linked, old_word.link_href, old_word.link_onclick);
+            tokens_out.push(trimmed_word);
+        }
+        if (!no_border) {
+            tokens_out.push(new Word("|"));
+        }
+        tokens_out.push(new Space(1));
+        tokens_out = tokens_out.concat(popover_content);
+        tokens_out.push(new Space(1));
+        if (!no_border) {
+            tokens_out.push(new Word("|"));
+        }
+        return { output: tokens_out, next_stage: 2 };
+    };
+    Popover.prototype.stage_2 = function (token_in, line, right_index) {
+        var token_out;
+        var next_stage;
+        var line_length = get_token_array_length(line);
+        var token_length = token_in.length();
+        if (line_length + token_length > right_index) {
+            var new_token_length = line_length + token_length - right_index;
+            if (token_in instanceof Space) {
+                var old_space = token_in;
+                var trimmed_space = new Space(new_token_length, token_in.space_value);
+                token_out = trimmed_space;
+            }
+            else {
+                var old_word = token_in;
+                var trimmed_word = new Word(old_word.text.substr(token_length - new_token_length, token_length), old_word.bold, old_word.italic, old_word.linked, old_word.link_href, old_word.link_onclick);
+                token_out = trimmed_word;
+            }
+            next_stage = 3;
+        }
+        else {
+            token_out = new Space(0);
+            next_stage = 2;
+        }
+        return { output: [token_out], next_stage: next_stage };
+    };
+    Popover.prototype.get_trigger_index = function (page_contents) {
+        var line_index;
+        var token_index;
+        var pre_length;
+        for (var i = 0; i < page_contents.length; i++) {
+            var line = page_contents[i];
+            for (var j = 0; j < line.length; j++) {
+                var token = line[j];
+                if ((token instanceof Word) && token.linked &&
+                    (token.link_onclick.indexOf("open_popover(" + this.id_number + ")") >= 0)) {
+                    line_index = i;
+                    token_index = j;
+                    pre_length = get_token_array_length(line.slice(0, j));
+                }
+            }
+        }
+        return [line_index, token_index, pre_length];
+    };
+    return Popover;
+}());
+var Tab = (function () {
+    function Tab(title, description, content) {
+        this.title = title;
+        this.description = description;
+        this.content = content;
     }
-    reload();
-}
-window.onresize = reload;
-window.onload = reload;
+    Tab.prototype.render = function (width, left_padding, right_padding) {
+        var lines = this.content.render(width - 3);
+        var rendered = this.render_description(width, left_padding, right_padding);
+        for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
+            var line = lines_1[_i];
+            var rendered_line = [];
+            rendered_line.push(new Space(left_padding));
+            rendered_line.push(new Word("|"));
+            rendered_line.push(new Space(1));
+            rendered_line = rendered_line.concat(line);
+            rendered_line.push(new Space(1));
+            rendered_line.push(new Word("|"));
+            rendered_line.push(new Space(right_padding));
+            rendered.push(rendered_line);
+        }
+        return rendered;
+    };
+    Tab.prototype.render_description = function (width, left_padding, right_padding) {
+        var rendered_line = [];
+        var rendered = [];
+        var rendered_desc = this.description.render(width - 5);
+        for (var i = 0; i < rendered_desc.length; i++) {
+            var desc = rendered_desc[i];
+            rendered_line = [];
+            rendered_line.push(new Space(left_padding));
+            rendered_line.push(new Word("|"));
+            rendered_line.push(new Space(2));
+            if (i == 0) {
+                rendered_line.push(new Word(">"));
+            }
+            else {
+                rendered_line.push(new Space(1));
+            }
+            rendered_line.push(new Space(1));
+            rendered_line = rendered_line.concat(desc);
+            rendered_line.push(new Word("|"));
+            rendered_line.push(new Space(right_padding));
+            rendered.push(rendered_line);
+        }
+        rendered_line = [];
+        rendered_line.push(new Space(left_padding));
+        rendered_line.push(new Word("|"));
+        rendered_line.push(new Space(width - 2));
+        rendered_line.push(new Word("|"));
+        rendered_line.push(new Space(right_padding));
+        rendered.push(rendered_line);
+        return rendered;
+    };
+    return Tab;
+}());
+var Page = (function () {
+    function Page(title, url, tabs) {
+        this.title = title;
+        this.url = url;
+        this.tabs = tabs;
+        this.selected_tab = 0;
+    }
+    Page.prototype.render = function (page_width, content_width, left_padding, right_padding) {
+        var rendered = [];
+        var rendered_line = [];
+        rendered_line.push(new Space(page_width));
+        rendered.push(rendered_line);
+        rendered = rendered.concat(this.render_title(page_width, left_padding, content_width));
+        rendered = rendered.concat(this.render_tab_selector(page_width, left_padding, content_width));
+        rendered = rendered.concat(this.tabs[this.selected_tab].render(content_width, left_padding, right_padding));
+        rendered = rendered.concat(this.render_bottom(left_padding, content_width, right_padding));
+        return rendered;
+    };
+    Page.prototype.render_bottom = function (left_padding, content_width, right_padding) {
+        var rendered = [];
+        var rendered_line = [];
+        rendered_line.push(new Space(left_padding));
+        rendered_line.push(new Word("|"));
+        rendered_line.push(new Space(content_width - 2));
+        rendered_line.push(new Word("|"));
+        rendered_line.push(new Space(right_padding));
+        rendered.push(rendered_line);
+        rendered_line = [];
+        rendered_line.push(new Space(left_padding + 1));
+        rendered_line.push(new Space(content_width - 2, "&#175;"));
+        rendered_line.push(new Space(right_padding + 2));
+        rendered.push(rendered_line);
+        return rendered;
+    };
+    Page.prototype.render_title = function (width, left_padding, content_width) {
+        var rendered_lines = [];
+        var rendered_title = this.title.render(content_width - 1);
+        for (var _i = 0, rendered_title_1 = rendered_title; _i < rendered_title_1.length; _i++) {
+            var line = rendered_title_1[_i];
+            var rendered_line = [];
+            rendered_line.push(new Space(left_padding + 2));
+            rendered_line = rendered_line.concat(line);
+            rendered_line.push(new Space(width - left_padding - content_width));
+            rendered_lines.push(rendered_line);
+        }
+        return rendered_lines;
+    };
+    Page.prototype.render_tab_selector = function (width, left_padding, content_width) {
+        var rendered = [];
+        var line_1 = [];
+        var line_2 = [];
+        var line_3 = [];
+        line_1.push(new Space(left_padding + 3));
+        line_2.push(new Space(left_padding + 2));
+        line_2.push(new Word("|"));
+        line_3.push(new Space(left_padding));
+        line_3.push(new Word("|"));
+        line_3.push(new Space(1, "&#175;"));
+        var index = 0;
+        for (var _i = 0, _a = this.tabs; _i < _a.length; _i++) {
+            var tab = _a[_i];
+            line_1.push(new Space(tab.title.length + 2, "_"));
+            line_1.push(new Space(1));
+            if (index == this.selected_tab) {
+                line_2.push(new Space(1));
+                line_2.push(new Word(tab.title));
+                line_2.push(new Space(1));
+                line_2.push(new Word("|"));
+                line_3.push(new Space(tab.title.length + 3));
+            }
+            else {
+                line_2.push(new Space(1));
+                line_2.push(new Word(tab.title, false, false, true, "#", "site.switch_tab(" + index + ")"));
+                line_2.push(new Space(1));
+                line_2.push(new Word("|"));
+                line_3.push(new Space(tab.title.length + 3, "&#175;"));
+            }
+            index++;
+        }
+        line_1.push(new Space(width - get_token_array_length(line_1)));
+        line_2.push(new Space(width - get_token_array_length(line_2)));
+        line_3.push(new Space(content_width + left_padding - get_token_array_length(line_3) - 1, "&#175;"));
+        line_3.push(new Word("|"));
+        line_3.push(new Space(width - get_token_array_length(line_3)));
+        rendered.push(line_1);
+        if (this.tabs.length > 0) {
+            rendered.push(line_2);
+        }
+        rendered.push(line_3);
+        return rendered;
+    };
+    return Page;
+}());
+var Navbar = (function () {
+    function Navbar(brand, page_names, page_links, dark_brand) {
+        if (dark_brand === void 0) { dark_brand = brand; }
+        this.brand = brand;
+        this.dark_brand = dark_brand;
+        this.page_names = page_names;
+        this.page_links = page_links;
+    }
+    Navbar.prototype.render = function (width, left_padding, selected_page, dark_mode) {
+        this.update_dimensions(width, left_padding, dark_mode);
+        var rendered = [];
+        var rendered_line = [];
+        rendered_line.push(new Space(width));
+        rendered.push(rendered_line);
+        if (width < this.mobile_cutoff) {
+            rendered.push(this.render_mobile_line(selected_page, dark_mode));
+        }
+        else {
+            rendered.push(this.render_desktop_line(selected_page, dark_mode));
+        }
+        rendered_line = [];
+        rendered_line.push(new Space(width, "_"));
+        rendered.push(rendered_line);
+        return rendered;
+    };
+    Navbar.prototype.render_desktop_line = function (selected_page, dark_mode) {
+        var brand = (dark_mode) ? this.dark_brand.render(-1)[0] : this.brand.render(-1)[0];
+        var rendered_line = [];
+        rendered_line.push(new Space(this.start_brand_index - 1));
+        rendered_line = rendered_line.concat(brand);
+        rendered_line.push(new Space(this.initial_spacing - 1));
+        for (var i = 0; i < this.page_names.length; i++) {
+            if (i == selected_page) {
+                rendered_line.push(new Word("["));
+                rendered_line.push(new Word(this.page_names[i]));
+                rendered_line.push(new Word("]"));
+            }
+            else {
+                rendered_line.push(new Space(1));
+                rendered_line.push(new Word(this.page_names[i], false, false, true, "#", "site.switch_page(" + i + ")"));
+                rendered_line.push(new Space(1));
+            }
+            if (i != (this.page_names.length - 1)) {
+                rendered_line.push(new Space(this.spacing - 1));
+            }
+            else {
+                rendered_line.push(new Space(this.right_spacing));
+            }
+        }
+        return rendered_line;
+    };
+    Navbar.prototype.render_mobile_line = function (selected_page, dark_mode) {
+        var brand = (dark_mode) ? this.dark_brand.render(-1)[0] : this.brand.render(-1)[0];
+        var rendered_line = [];
+        rendered_line.push(new Space(this.start_brand_index - 1));
+        rendered_line = rendered_line.concat(brand);
+        rendered_line.push(new Space(this.mobile_spacing - 1));
+        rendered_line.push(new Word("["));
+        rendered_line.push(new Word("X", false, false, true, "#", "site.open_popover(" + selected_page + ")"));
+        rendered_line.push(new Word("]"));
+        rendered_line.push(new Space(this.right_spacing));
+        return rendered_line;
+    };
+    Navbar.prototype.update_dimensions = function (page_width, left_padding, dark_mode) {
+        var link_length = this.page_names.reduce(function (x, y) { return x + y; }).length + 4;
+        var brand = (dark_mode) ? this.dark_brand.render(-1)[0] : this.brand.render(-1)[0];
+        var brand_length = get_token_array_length(brand);
+        this.start_brand_index = left_padding + 3;
+        var side_padding = this.start_brand_index * 2;
+        this.initial_spacing = Math.floor((page_width - side_padding - link_length) * 0.6);
+        this.spacing = Math.floor((page_width - side_padding - link_length - brand_length - this.initial_spacing) / (this.page_names.length - 1));
+        this.mobile_cutoff = link_length + brand_length + (2 * this.start_brand_index) + this.initial_spacing + this.page_names.length;
+        this.right_spacing = page_width - this.start_brand_index - brand_length - this.initial_spacing - link_length - ((this.page_names.length - 1) * this.spacing) + 3;
+        this.mobile_spacing = page_width - (2 * this.start_brand_index) - brand_length;
+    };
+    return Navbar;
+}());
+var Website = (function () {
+    function Website(content_width, navbar, pages, popovers) {
+        this.navbar = navbar;
+        this.target_content_pixel_width = content_width;
+        this.selected_page = 0;
+        this.pages = pages;
+        this.popovers = popovers;
+        this.dark_mode = false;
+        this.light_style = { background_colour: "#e3e3e3", text_colour: "black", link_colour: "blue" };
+        this.dark_style = { background_colour: "#171717", text_colour: "#a6a6a6", link_colour: "#9c0000" };
+    }
+    Website.prototype.get_page_style = function () {
+        return this.dark_mode ? this.dark_style : this.light_style;
+    };
+    Website.prototype.render = function () {
+        this.update_dimensions();
+        var rendered = this.navbar.render(this.page_width, this.left_padding, this.selected_page, this.dark_mode);
+        rendered = rendered.concat(this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding));
+        for (var _i = 0, _a = this.popovers; _i < _a.length; _i++) {
+            var popover = _a[_i];
+            rendered = popover.render(rendered, this.page_width);
+        }
+        var html = "";
+        for (var _b = 0, rendered_1 = rendered; _b < rendered_1.length; _b++) {
+            var line = rendered_1[_b];
+            for (var _c = 0, line_1 = line; _c < line_1.length; _c++) {
+                var token = line_1[_c];
+                html += token.render();
+            }
+            html += "\n";
+        }
+        return html;
+    };
+    Website.prototype.update_dimensions = function () {
+        var pixel_width = this.get_page_width();
+        var char_pixel_width = this.get_character_width();
+        this.page_width = Math.floor(pixel_width / char_pixel_width);
+        var min_line_chars = 50;
+        if ((pixel_width > this.target_content_pixel_width) && (this.page_width > min_line_chars)) {
+            this.content_width = Math.floor(this.target_content_pixel_width / char_pixel_width);
+            this.left_padding = Math.floor((this.page_width - this.content_width) / 2);
+            this.right_padding = this.page_width - this.content_width - this.left_padding;
+        }
+        else {
+            this.left_padding = 1;
+            this.right_padding = 1;
+            this.content_width = Math.floor(pixel_width / char_pixel_width) - 2;
+        }
+    };
+    Website.prototype.get_page_width = function () {
+        return Math.min(document.body.clientWidth, document.body.scrollWidth);
+    };
+    Website.prototype.get_character_width = function () {
+        var sizing_span = document.createElement("span");
+        sizing_span.innerHTML = '--------------------';
+        sizing_span.style.cssText += 'position: absolute; top: -100px; padding: 0px;';
+        document.body.insertBefore(sizing_span, document.body.firstChild);
+        var width = sizing_span.clientWidth / 20;
+        sizing_span.parentNode.removeChild(sizing_span);
+        return width;
+    };
+    Website.prototype.reload = function () {
+        var new_html = this.render();
+        document.body.innerHTML = new_html;
+        this.reload_style();
+    };
+    Website.prototype.reload_style = function () {
+        var page_style = this.get_page_style();
+        document.body.style.backgroundColor = page_style.background_colour;
+        document.body.style.color = page_style.text_colour;
+        var page_links = document.getElementsByTagName("a");
+        for (var i = 0; i < page_links.length; i++) {
+            if (page_links[i].href) {
+                page_links[i].style.color = page_style.link_colour;
+            }
+        }
+    };
+    Website.prototype.switch_tab = function (tab_index) {
+        this.pages[this.selected_page].selected_tab = tab_index;
+        console.log("Selected tab: " + tab_index);
+        this.reload();
+    };
+    Website.prototype.switch_page = function (page_index) {
+        for (var i = 0; i < this.popovers.length; i++) {
+            this.popovers[i].active = false;
+        }
+        this.selected_page = page_index;
+        console.log("Selected page: " + page_index);
+        this.reload();
+    };
+    Website.prototype.open_popover = function (id_number) {
+        console.log("Opening " + id_number);
+        for (var i = 0; i < this.popovers.length; i++) {
+            if (i == id_number) {
+                this.popovers[i].active = true;
+            }
+        }
+        this.reload();
+    };
+    Website.prototype.close_popover = function (id_number) {
+        for (var i = 0; i < this.popovers.length; i++) {
+            if (i == id_number) {
+                this.popovers[i].active = false;
+            }
+        }
+        this.reload();
+    };
+    Website.prototype.toggle_dark_mode = function () {
+        this.dark_mode = !this.dark_mode;
+        this.reload();
+    };
+    return Website;
+}());

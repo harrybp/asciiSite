@@ -54,7 +54,7 @@ class Popover {
             let popover_rendered: Array<Array<Token>> = [];
             let popover_top: Array<Token> = [];
             popover_top.push(new Space(pre_trigger_length - 1 - left_offset - 1, "_"));
-            popover_top.push(new Word("[" + trigger.text + "]", trigger.bold, trigger.italic, trigger.linked, trigger.link_href, "close_popover(" + this.id_number +")"));
+            popover_top.push(new Word("[" + trigger.text + "]", trigger.bold, trigger.italic, trigger.linked, trigger.link_href, "site.close_popover(" + this.id_number +")"));
             popover_top.push(new Space(right_offset - pre_trigger_length - trigger_length - 2, "_"));
             popover_rendered.push(popover_top);
 

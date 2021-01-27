@@ -9,6 +9,7 @@ class Website {
     target_content_pixel_width: number;
     pages: Array<Page>;
     selected_page: number;
+    popovers: Array<Popover>;
 
     // Page dimensions (given in characters)
     page_width: number;
@@ -20,11 +21,12 @@ class Website {
     light_style: Page_Style;
     dark_style: Page_Style;
 
-    constructor(content_width: number, navbar: Navbar, pages: Array<Page>){
+    constructor(content_width: number, navbar: Navbar, pages: Array<Page>, popovers: Array<Popover>){
         this.navbar = navbar;
         this.target_content_pixel_width = content_width;
         this.selected_page = 0;
         this.pages = pages;
+        this.popovers = popovers;
 
         this.dark_mode = false;
         this.light_style = { background_colour: "#e3e3e3", text_colour: "black", link_colour: "blue" };
@@ -40,12 +42,12 @@ class Website {
 
     // ------------------------------------------------------------------------
     // Render the website to the DOM
-    render(popovers: Array<Popover>): string {
+    render(): string {
         this.update_dimensions();
         let rendered: Array<Array<Token>> = this.navbar.render(this.page_width, this.left_padding, this.selected_page, this.dark_mode);
         rendered = rendered.concat(this.pages[this.selected_page].render(this.page_width, this.content_width, this.left_padding, this.right_padding));
 
-        for(const popover of popovers){
+        for(const popover of this.popovers){
             rendered = popover.render(rendered, this.page_width);
         }
 
@@ -104,5 +106,77 @@ class Website {
         sizing_span.parentNode.removeChild(sizing_span);
         return width;
 
+    }
+
+    // ----------------------------------------------------------------------------
+    // Reload: Renders the page
+    reload(): void {
+        let new_html: string = this.render();
+        document.body.innerHTML = new_html;
+        this.reload_style();
+    }
+
+    // -----------------------------------------------------------------------------
+    // Update the page colour-scheme
+    reload_style(): void {
+        let page_style: Page_Style = this.get_page_style();
+        document.body.style.backgroundColor = page_style.background_colour;
+        document.body.style.color = page_style.text_colour;
+
+        let page_links: any = document.getElementsByTagName("a");
+        for(var i = 0; i < page_links.length; i++){
+            if(page_links[i].href){
+                page_links[i].style.color = page_style.link_colour;
+            }
+        }
+    }
+
+    // ----------------------------------------------------------------------------
+    // Switch Tab
+    switch_tab(tab_index: number): void {
+        this.pages[this.selected_page].selected_tab = tab_index;
+        console.log("Selected tab: " + tab_index);
+        this.reload();
+    }
+
+    // ----------------------------------------------------------------------------
+    // Switch Page
+    switch_page(page_index: number): void {
+        for(var i = 0; i < this.popovers.length; i++){
+            this.popovers[i].active = false;
+        }
+        this.selected_page = page_index;
+        console.log("Selected page: " + page_index);
+        this.reload();
+    }
+
+    // ----------------------------------------------------------------------------
+    // Open Popover
+    open_popover(id_number: number): void {
+        console.log("Opening " + id_number);
+        for(var i = 0; i < this.popovers.length; i++){
+            if(i == id_number){
+                this.popovers[i].active = true;
+            }
+        }
+        this.reload();
+    }
+
+    // ----------------------------------------------------------------------------
+    // Close Popover
+    close_popover(id_number: number): void {
+        for(var i = 0; i < this.popovers.length; i++){
+            if(i == id_number){
+                this.popovers[i].active = false;
+            }
+        }
+        this.reload();
+    }
+
+    // ----------------------------------------------------------------------------
+    // Toggle Dark Mode
+    toggle_dark_mode(): void{
+        this.dark_mode = !this.dark_mode;
+        this.reload();
     }
 }

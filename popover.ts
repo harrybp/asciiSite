@@ -105,7 +105,9 @@ class Popover {
                             let result_1: Stage_Result = this.stage_1(token, line_so_far, left_offset, popover_rendered[i], (i==3) || (i ==0));
                             stage = result_1.next_stage;
                             new_line = new_line.concat(result_1.output);
-                            j++;
+                            if(stage == 1){
+                                j++;
+                            }
                             break;
 
                         // Case 2 : waiting for the end of the popover

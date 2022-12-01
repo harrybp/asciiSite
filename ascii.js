@@ -323,6 +323,9 @@ var Popover = (function () {
         if (this.active) {
             var new_lines = [];
             var indexes = this.get_trigger_index(page_contents);
+            if (typeof indexes[0] == "undefined") {
+                return page_contents;
+            }
             var line_index = indexes[0];
             var token_index = indexes[1];
             var pre_trigger_length = indexes[2];
@@ -748,7 +751,12 @@ var Website = (function () {
     Website.prototype.update_dimensions = function () {
         var pixel_width = this.get_page_width();
         var char_pixel_width = this.get_character_width();
-        this.page_width = Math.floor(pixel_width / char_pixel_width);
+        var page_width = pixel_width / char_pixel_width;
+        var floor_page_width = Math.floor(pixel_width / char_pixel_width);
+        if (floor_page_width == page_width) {
+            floor_page_width -= 1;
+        }
+        this.page_width = floor_page_width;
         var min_line_chars = 50;
         if ((pixel_width > this.target_content_pixel_width) && (this.page_width > min_line_chars)) {
             this.content_width = Math.floor(this.target_content_pixel_width / char_pixel_width);

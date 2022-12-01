@@ -27,6 +27,10 @@ class Popover {
             let new_lines: Array<Array<Token>> = [];
 
             let indexes: Array<number> = this.get_trigger_index(page_contents);
+            if(typeof indexes[0] == "undefined"){
+                return page_contents;
+            }
+
             let line_index: number = indexes[0];
             let token_index: number = indexes[1];
             let pre_trigger_length: number = indexes[2];

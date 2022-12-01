@@ -67,7 +67,15 @@ class Website {
     update_dimensions(): void {
         let pixel_width: number = this.get_page_width();
         let char_pixel_width: number = this.get_character_width();
-        this.page_width = Math.floor(pixel_width / char_pixel_width);
+        let page_width: number = pixel_width / char_pixel_width;
+
+        // If page_width is a round number then need to minus one
+        let floor_page_width: number = Math.floor(pixel_width / char_pixel_width);
+        if(floor_page_width == page_width){
+            floor_page_width -= 1;
+        }
+
+        this.page_width = floor_page_width;
         let min_line_chars: number = 50;
 
         // No need to shrink things down
